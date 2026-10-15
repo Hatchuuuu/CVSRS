@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "items": {
+    "SEC-01": {
+      "attempt_limit": 2,
+      "attempts": [
+        {
+          "number": 1,
+          "started_at": "2026-10-01T14:00:00Z",
+          "mode": "user-directed-repair",
+          "worktree": ".worktrees/loop-security-rate-limit-20261001",
+          "status": "blocked-model-access",
+          "focused_verification": "13 focused tests pass after eight expected baseline failures; full checks, independent review and integration remain pending.",
+          "blocker": "Expanded user instruction requires an Opus 5.5 team. Claude CLI opus availability probe returned API 429 session limit, reset 2026-10-02 00:10 Asia/Manila; modelUsage was empty. No fallback or agent dispatch performed.",
+          "baseline": "182 unit tests passed in isolated worktree",
+          "retry_guard": "No retry permitted until loop-context --check is available and succeeds."
+        }
+      ]
+    }
+  }
+}

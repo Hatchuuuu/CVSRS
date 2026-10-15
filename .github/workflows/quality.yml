@@ -1,0 +1,54 @@
+name: Application quality
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CVSRS_PUBLIC_URL: https://cvsrs.example.org
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Locate PostgreSQL binaries
+        run: echo "PG_BIN=$(pg_config --bindir)" >> "$GITHUB_ENV"
+      - name: Start project disposable cluster
+        run: npm run db:start
+      - name: Types, lint, unit tests, clean migrations and DB regressions
+        run: npm run test:all
+      - name: Production compilation
+        run: npm run build
+      - name: Restore and verify disposable test database
+        run: npm run drill:restore -- cvsrs_test
+      - name: Stop disposable cluster
+        if: always()
+        run: npm run db:stop
+  e2e:
+    # Browser journeys on a real local Supabase stack (Auth, PostgREST, PostgreSQL, test inbox). Docker is preinstalled on the runner.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Browser journeys (isolated end-to-end stack, reset per run)
+        run: npm run test:e2e
+      - name: Keep the report when a journey fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "plugins": [],
+    "incremental": false
+  },
+  "include": [
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "scripts/**/*.ts",
+    "*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

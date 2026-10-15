@@ -1,0 +1,31 @@
+import { afterAll,beforeAll,expect,it } from "vitest";
+import { admin,as,expectCode,newUser,op,pool } from "./helpers";
+import { clinicalWorld,setDemoMode,type ClinicalWorld } from "./clinical-setup";
+let w:ClinicalWorld;
+beforeAll(async()=> { w=await clinicalWorld(); });
+afterAll(async()=> { await setDemoMode(false); await pool.end(); });
+it("reserves creation only for administrators and never stores a password",async()=> {
+ const key=op(); const payload={fullName:"New Midwife",email:`${key}@example.test`,role:"clinical_staff",positionTitle:"Midwife",passwordHash:"a".repeat(64)};
+ await expectCode(as(w.lead,q=>q("select public.prepare_staff_account_creation($1,$2,$3)",[key,w.clinic,JSON.stringify(payload)])),"CV403");
+ const result=await as(w.techAdmin,q=>q("select public.prepare_staff_account_creation($1,$2,$3) r",[key,w.clinic,JSON.stringify(payload)]));
+ expect(result).toEqual(await as(w.techAdmin,q=>q("select public.prepare_staff_account_creation($1,$2,$3) r",[key,w.clinic,JSON.stringify(payload)])));
+ await expectCode(as(w.techAdmin,q=>q("select public.prepare_staff_account_creation($1,$2,$3)",[key,w.clinic,JSON.stringify({...payload,role:"bhw"})])),"CV409");
+});
+it("finalizes the admin-created application as pending membership and replays safely",async()=> {
+ const key=op(); const email=`${key}@example.test`; const payload={fullName:"Created Nurse",email,role:"clinical_staff",passwordHash:"b".repeat(64),barangay:"Bunao",cityMunicipality:"Dumaguete City"};
+ await as(w.techAdmin,q=>q("select public.prepare_staff_account_creation($1,$2,$3)",[key,w.clinic,JSON.stringify(payload)]));
+ const account=await newUser("admin-created");
+ await admin("update auth.users set email=$2,raw_user_meta_data=jsonb_build_object('staff_creation_key',$3::text) where id=$1",[account.id,email,key]);
+ await as(account,q=>q("select public.submit_staff_application($1,$2,'clinical_staff','Nurse','Created by administrator')",[op(),w.clinic]));
+ const call=()=>as(w.techAdmin,q=>q<{r:{membershipId:string;status:string}}>("select public.complete_staff_account_creation($1,$2) r",[key,w.clinic]));
+ const [{r}]=await call(); expect(await call()).toEqual([{r}]);
+ expect(r.status).toBe("pending_approval");
+ expect((await admin("select barangay,city_municipality from public.staff_memberships where id=$1",[r.membershipId]))[0]).toEqual({barangay:"Bunao",city_municipality:"Dumaguete City"});
+ const [{version:assignmentVersion}]=await admin<{version:number}>("select version from public.staff_memberships where id=$1",[r.membershipId]);
+ await as(w.techAdmin,q=>q("select public.update_staff_location($1,$2,$3,$4,'New assignment','Dumaguete City')",[op(),w.clinic,r.membershipId,assignmentVersion]));
+ await call();
+ expect((await admin<{barangay:string}>("select barangay from public.staff_memberships where id=$1",[r.membershipId]))[0].barangay).toBe("New assignment");
+ const [{version}]=await admin<{version:number}>("select version from public.staff_memberships where id=$1",[r.membershipId]);
+ await expectCode(as(w.techAdmin,q=>q("select public.approve_staff_membership($1,$2,$3)",[op(),r.membershipId,version])),"CV403");
+ await as(w.lead,q=>q("select public.approve_staff_membership($1,$2,$3)",[op(),r.membershipId,version]));
+});

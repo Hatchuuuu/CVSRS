@@ -1,0 +1,2992 @@
+/*
+ * Public landing page. Loaded only by src/app/page.tsx; every rule is scoped to `.lp` or to the site chrome while the
+ * landing page is mounted (`body:has(.landing-page)`). Visual grammar: the paper Immunization Card's ruled grid and
+ * dose marks, on a royal-blue arrival and close, with white and pale-blue reading sections between them.
+ *
+ * Rhythm (8px base): section padding --lp-section (72→128px); heading block → content 40–56px; card gutters 16–24px;
+ *   inner padding 24–40px; more space above a heading than below it.
+ * Type: badge 14px/700 · h1 40→68px/800 · h2 32→48px/800 · h3 20px/700 (24px in a service panel) · lede 17→20px ·
+ *   body 17px · secondary 16px · labels and captions 13–15px. Atkinson Hyperlegible Next throughout.
+ */
+
+@font-face {
+  font-family: "eVac Atkinson";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/atkinson-next-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "eVac Atkinson";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/atkinson-next-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "eVac Atkinson";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/atkinson-next-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "eVac Atkinson";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/atkinson-next-800.woff2") format("woff2");
+}
+
+body:has(.landing-page) {
+  --lp-font: "eVac Atkinson", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --lp-ink: #0b1a3a;
+  --lp-text: #35415e;
+  --lp-muted: #56627f;
+  --lp-blue: #0648ef;
+  --lp-blue-strong: #0436bd;
+  --lp-blue-ink: #0a2f9e;
+  --lp-blue-deep: #0433c4;
+  --lp-navy: #0a1733;
+  --lp-pale: #f3f6fe;
+  --lp-pale-2: #e5ecfd;
+  --lp-line: #e1e7f3;
+  --lp-line-strong: #c6d1e6;
+  --lp-amber-ink: #8a4300;
+  --lp-amber-bg: #fff4e2;
+  --lp-amber-line: #f2a33a;
+  --lp-green-ink: #0f6b3c;
+  --lp-green-bg: #e6f6ed;
+  --lp-on-blue: #e3eaff;
+  --lp-on-blue-soft: #b8ccff;
+  --lp-shadow-sm: 0 1px 2px rgb(11 26 58 / 0.05), 0 4px 12px -6px rgb(11 26 58 / 0.12);
+  --lp-shadow-md: 0 1px 2px rgb(11 26 58 / 0.05), 0 18px 40px -24px rgb(11 26 58 / 0.28);
+  --lp-shadow-lg: 0 1px 2px rgb(11 26 58 / 0.06), 0 24px 48px -20px rgb(11 26 58 / 0.3);
+  --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lp-max: 1200px;
+  --lp-gutter: clamp(16px, 4vw, 32px);
+  --lp-section: clamp(72px, 9vw, 128px);
+  --lp-radius: 20px;
+  --lp-radius-lg: 28px;
+  --lp-rule: rgb(6 72 239 / 0.06);
+
+  --color-canvas: #ffffff;
+  interpolate-size: allow-keywords;
+  scrollbar-color: var(--lp-line-strong) transparent;
+}
+
+body:has(.landing-page) ::selection {
+  background: #cddafd;
+  color: var(--lp-ink);
+}
+
+/* ── Site chrome while the landing page is shown ─────────────────────────── */
+
+body:has(.landing-page) [data-workspace-frame] {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+
+body:has(.landing-page) [data-workspace-navigation] {
+  display: none;
+}
+
+body:has(.landing-page) #main {
+  max-width: none;
+  padding: 0;
+}
+
+body:has(.landing-page) [data-site-header],
+body:has(.landing-page) .site-footer {
+  font-family: var(--lp-font);
+}
+
+body:has(.landing-page) [data-site-header] {
+  border-bottom-color: rgb(11 26 58 / 0.06);
+  background: rgb(243 246 254 / 0.92);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+
+body:has(.landing-page) [data-site-header]>div {
+  max-width: calc(var(--lp-max) + 2 * var(--lp-gutter));
+  padding-inline: var(--lp-gutter);
+  min-height: 72px;
+}
+
+@media (max-width: 639px) {
+  body:has(.landing-page) [data-site-header]>div {
+    min-height: 64px;
+  }
+}
+
+/* ── Foundations ─────────────────────────────────────────────────────────── */
+
+.lp {
+  font-family: var(--lp-font);
+  color: var(--lp-text);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  caret-color: var(--lp-blue);
+}
+
+.lp a {
+  text-underline-offset: 0.2em;
+}
+
+.lp-container {
+  width: 100%;
+  max-width: calc(var(--lp-max) + 2 * var(--lp-gutter));
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+/* In-page links land each section just under the sticky header. The offset lives on <html> only: a section
+   scroll-margin would stack on top of the global scroll-padding and land every section ~90px too low. */
+html:has(.landing-page) {
+  scroll-padding-top: calc(var(--header-h) + 8px);
+}
+
+.lp-h1,
+.lp-h2,
+.lp-h3 {
+  color: var(--lp-ink);
+  text-wrap: balance;
+}
+
+.lp-h1 {
+  font-size: clamp(2.5rem, 1.6rem + 3.2vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+
+.lp-h2 {
+  font-size: clamp(2rem, 1.5rem + 1.6vw, 3rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.lp-h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.lp-lede {
+  max-width: 32em;
+  font-size: clamp(1.0625rem, 0.97rem + 0.38vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.lp-body {
+  max-width: 36em;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--lp-muted);
+}
+
+.lp-heading {
+  display: grid;
+  gap: 16px;
+  margin-bottom: clamp(40px, 4.5vw, 56px);
+}
+
+@media (min-width: 1024px) {
+  .lp-heading--split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 48px;
+  }
+
+  .lp-heading--split .lp-body {
+    justify-self: end;
+    max-width: 30em;
+  }
+}
+
+.lp-section {
+  padding-block: var(--lp-section);
+}
+
+.lp-section--tint {
+  background: var(--lp-pale);
+}
+
+/* The paper card's ruling, faint enough to read as texture rather than lines. */
+.lp-section--ruled {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 39px, var(--lp-rule) 39px 40px),
+    var(--lp-pale);
+}
+
+/* Two columns from 1024px: an intro that stays in view, and the content it introduces. */
+.lp-split {
+  display: grid;
+  gap: 40px;
+}
+
+.lp-split-intro {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  justify-items: start;
+}
+
+@media (min-width: 1024px) {
+  .lp-split {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: clamp(48px, 6vw, 96px);
+  }
+
+  .lp-split-intro {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+    align-self: start;
+  }
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lp-btn {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 180ms var(--lp-ease),
+    border-color 180ms var(--lp-ease),
+    box-shadow 180ms var(--lp-ease),
+    color 180ms var(--lp-ease),
+    transform 180ms var(--lp-ease);
+}
+
+.lp-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: transform 220ms var(--lp-ease);
+}
+
+.lp-btn:active {
+  transform: scale(0.98);
+}
+
+.lp-btn:focus-visible {
+  outline: 3px solid var(--lp-blue);
+  outline-offset: 3px;
+}
+
+.lp-btn--primary {
+  background: var(--lp-blue);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgb(6 72 239 / 0.24), 0 10px 24px -10px rgb(6 72 239 / 0.6);
+}
+
+.lp-btn--primary {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.lp-btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.32) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.lp-btn--secondary {
+  background: #ffffff;
+  border-color: var(--lp-line-strong);
+  color: var(--lp-ink);
+}
+
+.lp-btn--small {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+}
+
+.lp-btn--small svg {
+  color: var(--lp-blue);
+}
+
+.lp-btn--light {
+  background: #ffffff;
+  color: var(--lp-blue-ink);
+  box-shadow: 0 1px 2px rgb(4 20 70 / 0.2), 0 12px 28px -12px rgb(4 20 70 / 0.55);
+}
+
+.lp-btn--outline-light {
+  border-color: rgb(255 255 255 / 0.6);
+  color: #ffffff;
+}
+
+.lp-btn--light:focus-visible,
+.lp-btn--outline-light:focus-visible {
+  outline-color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lp-btn--primary:hover {
+    background: var(--lp-blue-strong);
+    box-shadow: 0 1px 2px rgb(6 72 239 / 0.24), 0 14px 28px -12px rgb(6 72 239 / 0.7);
+  }
+
+  .lp-btn--secondary:hover {
+    border-color: var(--lp-blue);
+    background: var(--lp-pale);
+    color: var(--lp-blue-ink);
+  }
+
+  .lp-btn--light:hover {
+    background: var(--lp-pale-2);
+    box-shadow: 0 1px 2px rgb(4 20 70 / 0.2), 0 16px 32px -12px rgb(4 20 70 / 0.6);
+  }
+
+  .lp-btn--outline-light:hover {
+    border-color: #ffffff;
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  .lp-btn:hover svg,
+  .lp-link:hover svg {
+    transform: translateX(3px);
+  }
+
+  .lp-btn--small:hover svg {
+    transform: none;
+  }
+}
+
+.lp-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--lp-blue);
+  text-decoration: none;
+}
+
+.lp-link svg {
+  width: 17px;
+  height: 17px;
+  transition: transform 220ms var(--lp-ease);
+}
+
+.lp-link:hover {
+  color: var(--lp-blue-strong);
+  text-decoration: underline;
+}
+
+.lp-link:focus-visible {
+  outline: 3px solid var(--lp-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Hero: a light arrival; the family sits in an arch window with sample record notes ─────────────────────── */
+
+.lp-hero {
+  position: relative;
+  overflow-x: clip;
+  background: var(--lp-pale);
+}
+
+.lp-hero-grid {
+  display: grid;
+  gap: 56px;
+  padding-top: clamp(40px, 7vw, 64px);
+}
+
+.lp-hero-copy {
+  display: grid;
+  gap: 24px;
+  justify-items: start;
+  max-width: 640px;
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 14px 4px 11px;
+  border: 1px solid #d3defc;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--lp-blue-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.lp-badge svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: var(--lp-blue);
+}
+
+/* The system's full name in three balanced lines from 390px up: navy, then its second half in royal blue. */
+.lp-hero .lp-h1 {
+  max-width: 10.5em;
+  font-size: clamp(2.125rem, 1.2rem + 2.9vw, 3.5rem);
+  line-height: 1.06;
+}
+
+.lp-hero .lp-h1 > span {
+  display: block;
+  color: var(--lp-blue);
+}
+
+/* A hand-drawn swoosh under "Record System", the way a nurse underlines the line that matters on the card. */
+.lp-h1-mark {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.lp-h1-mark svg {
+  position: absolute;
+  left: -2%;
+  bottom: -0.04em;
+  z-index: -1;
+  width: 104%;
+  height: 0.3em;
+  overflow: visible;
+}
+
+.lp-h1-mark path {
+  fill: none;
+  stroke: #ffc94d;
+  stroke-width: 0.17em;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.lp-hero .lp-lede {
+  color: var(--lp-muted);
+}
+
+.lp-hero-copy .lp-actions {
+  margin-top: 4px;
+}
+
+.lp-hero-facts {
+  justify-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  padding-top: 20px;
+  border-top: 1px solid #dbe3f5;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.lp-hero-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-hero-facts svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--lp-blue);
+}
+
+/* The family is photographed on white seamless and multiplied onto a pale-blue arch, so the backdrop becomes the arch.
+ * A dashed outline echoes the arch one padding out, and three sample notes float over its edges. */
+.lp-hero-visual {
+  --lp-arch-pad: clamp(18px, 5vw, 30px);
+  position: relative;
+  justify-self: center;
+  width: min(100%, 520px);
+  padding: var(--lp-arch-pad) var(--lp-arch-pad) 0;
+}
+
+.lp-hero-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed #b7c8f3;
+  border-bottom: 0;
+  border-radius: 9999px 9999px 0 0;
+  pointer-events: none;
+}
+
+.lp-hero-arch {
+  position: relative;
+  aspect-ratio: 500 / 678;
+  overflow: hidden;
+  border-radius: 9999px 9999px 0 0;
+  background: linear-gradient(180deg, #dce6ff, #c9d8ff);
+}
+
+/* 1.8 times the arch's width and shifted left by 30%, so the three people fill the arch and sit on its foot. */
+.lp-hero-arch img {
+  position: absolute;
+  left: -30%;
+  bottom: 0;
+  width: 180%;
+  max-width: none;
+  height: auto;
+  mix-blend-mode: multiply;
+  /* The seamless backdrop is a touch grey, so its top edge would show as a line; it dissolves above the hair. */
+  mask-image: linear-gradient(to bottom, transparent, #000 12%);
+}
+
+/* Illustrations, not controls: nothing here is focusable or looks pressable. */
+.lp-hero-chip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(11 26 58 / 0.06), 0 18px 40px -18px rgb(11 26 58 / 0.35);
+  color: var(--lp-muted);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.lp-hero-chip strong {
+  display: block;
+  color: var(--lp-ink);
+  font-size: 0.9375rem;
+}
+
+.lp-hero-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue);
+}
+
+.lp-hero-chip-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lp-hero-chip-icon .lp-hero-check {
+  width: 24px;
+  height: 24px;
+}
+
+.lp-hero-check circle {
+  fill: var(--lp-blue);
+}
+
+.lp-hero-check path {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lp-hero-chip--due .lp-hero-chip-icon {
+  background: var(--lp-amber-bg);
+  color: #b45f00;
+}
+
+.lp-hero-chip--given {
+  top: 29%;
+  left: -70px;
+}
+
+/* Hangs past the arch only where the page margin has room for it. */
+.lp-hero-chip--due {
+  top: 11%;
+  right: -12px;
+}
+
+@media (min-width: 1340px) {
+  .lp-hero-chip--due {
+    right: -50px;
+  }
+}
+
+.lp-hero-chip--verified {
+  top: 73%;
+  left: -30px;
+}
+
+/* Phones: the notes tuck inside the outline, above the faces, and get smaller. */
+@media (max-width: 639px) {
+  .lp-hero-chip {
+    gap: 10px;
+    padding: 8px 12px 8px 8px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+  }
+
+  .lp-hero-chip strong {
+    font-size: 0.875rem;
+  }
+
+  .lp-hero-chip-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .lp-hero-chip--given {
+    top: 18%;
+    left: 0;
+  }
+
+  .lp-hero-chip--due {
+    top: 3%;
+    right: 0;
+  }
+
+  .lp-hero-chip--verified {
+    top: 74%;
+    left: 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .lp-hero-facts {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lp-hero-copy .lp-actions,
+  .lp-hero-copy .lp-btn {
+    width: 100%;
+  }
+}
+
+/* Wide screens: copy and arch side by side. The arch floats 56px above the hero's foot with rounded lower corners,
+ * is sized so the whole of it fits on the first screen, and is nudged right into the page margin where there is room
+ * (up to 48px, never so far that the due note leaves the screen). */
+@media (min-width: 1200px) {
+  .lp-hero-grid {
+    grid-template-columns: minmax(0, 580px) minmax(0, 1fr);
+    column-gap: 40px;
+    min-height: clamp(660px, calc(100svh - var(--header-h, 72px)), 820px);
+    padding-top: 0;
+  }
+
+  .lp-hero-copy {
+    align-self: center;
+    padding-block: 56px 96px;
+  }
+
+  /* Up to 32px wider than its column (it grows into the gap) and 640px in all. */
+  .lp-hero-visual {
+    align-self: end;
+    justify-self: end;
+    width: min(100% + 32px, 640px, calc((100svh - var(--header-h, 72px) - 72px) * 0.79));
+    margin-block: 32px 40px;
+    translate: clamp(0px, (100vw - 1200px) / 2 - 72px, 48px) 0;
+  }
+
+  /* Beside the headline, the given note overhangs less so it never meets the first line. */
+  .lp-hero-chip--given {
+    left: -40px;
+  }
+
+  /* Semicircular top (half the width, as a share of the 500:678 height) and softly rounded feet. */
+  .lp-hero-arch {
+    border-radius: 50% 50% 28px 28px / 36.87% 36.87% 28px 28px;
+  }
+}
+
+/* ── Sample record card ──────────────────────────────────────────────────── */
+
+.lp-record {
+  border: 1px solid var(--lp-line);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(11 26 58 / 0.06), 0 28px 56px -20px rgb(11 26 58 / 0.32);
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+.lp-record-inner {
+  padding: 16px;
+}
+
+.lp-record-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 2px 14px;
+}
+
+.lp-record-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue-ink);
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+
+.lp-record-who {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.lp-record-who strong {
+  color: var(--lp-ink);
+  font-size: 1rem;
+}
+
+.lp-record-who span {
+  color: var(--lp-muted);
+  font-size: 0.8125rem;
+}
+
+.lp-record-sample,
+.lp-stage-tag {
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px dashed var(--lp-line-strong);
+  border-radius: 999px;
+  color: var(--lp-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lp-record-grid {
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lp-record-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 50px);
+  align-items: center;
+  min-height: 36px;
+  border-top: 1px solid var(--lp-line);
+}
+
+.lp-record-row>* {
+  justify-self: center;
+}
+
+.lp-record-row> :first-child {
+  justify-self: start;
+  padding-left: 12px;
+}
+
+.lp-record-row--head {
+  min-height: 32px;
+  border-top: 0;
+  background: var(--lp-pale);
+  color: var(--lp-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.lp-record-vaccine {
+  color: var(--lp-ink);
+  font-weight: 600;
+}
+
+.lp-dose--none {
+  width: 10px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--lp-line-strong);
+}
+
+.lp-dose--given svg,
+.lp-mark--yes svg,
+.lp-cert-check svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.lp-dose--given circle,
+.lp-mark--yes circle {
+  fill: var(--lp-blue);
+}
+
+.lp-dose--given path,
+.lp-mark--yes path,
+.lp-cert-check path,
+.lp-track-mark path {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lp-dose--due {
+  padding: 2px 8px;
+  border: 1.5px solid var(--lp-amber-line);
+  border-radius: 999px;
+  background: var(--lp-amber-bg);
+  color: var(--lp-amber-ink);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.lp-record-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--lp-amber-bg);
+  color: var(--lp-amber-ink);
+  font-size: 0.875rem;
+}
+
+.lp-record-next>span:first-child {
+  white-space: nowrap;
+}
+
+.lp-record-next strong {
+  margin-right: 4px;
+  font-weight: 800;
+}
+
+/* Plain text, not a control: nothing inside the illustration may look clickable. */
+.lp-record-when {
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+/* ── Services: one counter, five windows ─────────────────────────────────── */
+
+.lp-explorer {
+  display: grid;
+  gap: 20px;
+}
+
+/* Phones and tablets: the windows are a scrolling row of tabs above the panel. */
+.lp-tabs {
+  display: flex;
+  gap: 8px;
+  margin-inline: calc(-1 * var(--lp-gutter));
+  padding: 6px var(--lp-gutter) 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 44px;
+  scrollbar-width: none;
+}
+
+.lp-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-tab {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 16px 6px 6px;
+  border: 1px solid var(--lp-line-strong);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--lp-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition:
+    background-color 200ms var(--lp-ease),
+    border-color 200ms var(--lp-ease),
+    box-shadow 200ms var(--lp-ease),
+    color 200ms var(--lp-ease);
+}
+
+.lp-tab:focus-visible {
+  outline: 3px solid var(--lp-blue);
+  outline-offset: 2px;
+}
+
+.lp-tab-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue);
+  transition:
+    background-color 200ms var(--lp-ease),
+    color 200ms var(--lp-ease);
+}
+
+.lp-tab-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lp-tab-text {
+  display: grid;
+  gap: 2px;
+}
+
+.lp-tab-name {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.lp-tab-hint {
+  display: none;
+  color: var(--lp-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.lp-tab[aria-selected="true"] {
+  border-color: var(--lp-blue);
+  background: var(--lp-blue);
+  color: #ffffff;
+  box-shadow: 0 10px 24px -14px rgb(6 72 239 / 0.8);
+}
+
+.lp-tab[aria-selected="true"] .lp-tab-icon {
+  background: rgb(255 255 255 / 0.16);
+  color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lp-tab[aria-selected="false"]:hover {
+    border-color: var(--lp-blue);
+    background: var(--lp-pale);
+  }
+}
+
+.lp-panel {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius-lg);
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-md);
+}
+
+.lp-panel[hidden] {
+  display: none;
+}
+
+/* The stage holds a sample of the real screen on the card's ruled paper. */
+.lp-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  /* The top padding always clears the "Sample screen" tag, even where the stage is short. */
+  padding: max(52px, clamp(24px, 4vw, 48px)) clamp(16px, 3vw, 40px) clamp(24px, 4vw, 48px);
+  border-bottom: 1px solid var(--lp-line);
+  background:
+    radial-gradient(70% 60% at 50% 40%, rgb(255 255 255 / 0.85), transparent 75%),
+    repeating-linear-gradient(to bottom, transparent 0 27px, var(--lp-rule) 27px 28px),
+    var(--lp-pale);
+}
+
+.lp-stage-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  margin: 0;
+  background: #ffffff;
+}
+
+.lp-panel-body {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 14px;
+  padding: clamp(24px, 3.5vw, 44px);
+}
+
+.lp-panel-body .lp-h3 {
+  font-size: clamp(1.375rem, 1.2rem + 0.5vw, 1.625rem);
+  letter-spacing: -0.015em;
+}
+
+.lp-panel-body>p {
+  max-width: 34em;
+  color: var(--lp-muted);
+}
+
+.lp-points {
+  display: grid;
+  gap: 10px;
+  margin-block: 4px 6px;
+}
+
+.lp-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--lp-text);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.lp-points svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue);
+  stroke-width: 3;
+}
+
+@media (min-width: 768px) {
+  .lp-panel {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    min-height: 420px;
+  }
+
+  .lp-stage {
+    border-right: 1px solid var(--lp-line);
+    border-bottom: 0;
+  }
+}
+
+/* Wide screens: the windows stand in a column beside the panel, each naming what it shows. */
+@media (min-width: 1024px) {
+  .lp-explorer {
+    grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  .lp-tabs {
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .lp-tab {
+    gap: 14px;
+    padding: 14px 16px 14px 14px;
+    border-color: transparent;
+    border-radius: 16px;
+    background: transparent;
+  }
+
+  .lp-tab-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .lp-tab-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lp-tab-name {
+    font-size: 1.0625rem;
+  }
+
+  .lp-tab-hint {
+    display: block;
+  }
+
+  .lp-tab[aria-selected="true"] {
+    border-color: var(--lp-line);
+    background: #ffffff;
+    color: var(--lp-ink);
+    box-shadow: var(--lp-shadow-md);
+  }
+
+  .lp-tab[aria-selected="true"] .lp-tab-icon {
+    background: var(--lp-blue);
+    color: #ffffff;
+  }
+
+  .lp-tab[aria-selected="true"] .lp-tab-name {
+    color: var(--lp-blue-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .lp-tab[aria-selected="false"]:hover {
+      border-color: transparent;
+      background: var(--lp-pale);
+    }
+  }
+
+  .lp-panel {
+    min-height: 460px;
+  }
+
+  /* Beside the tab column the panel is too narrow for two columns until 1280px; the sample sits above the words. */
+  @media (max-width: 1279px) {
+    .lp-panel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lp-stage {
+      border-right: 0;
+      border-bottom: 1px solid var(--lp-line);
+    }
+  }
+
+  /* Samples are drawn at phone scale; the larger stage shows them a size up. */
+  .lp-stage>.lp-demo {
+    zoom: 1.15;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lp-stage>.lp-demo {
+    zoom: 1.25;
+  }
+}
+
+/* Phones: the row fades at whichever edge still has tabs beyond it, driven by its own scroll position. */
+@property --lp-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --lp-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes lp-tab-fade {
+  0% {
+    --lp-fade-start: 0px;
+    --lp-fade-end: 40px;
+  }
+
+  12% {
+    --lp-fade-start: 40px;
+  }
+
+  88% {
+    --lp-fade-end: 40px;
+  }
+
+  100% {
+    --lp-fade-start: 40px;
+    --lp-fade-end: 0px;
+  }
+}
+
+@media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll(self inline)) {
+    .lp-tabs {
+      mask-image: linear-gradient(to right,
+          transparent 0,
+          #000 var(--lp-fade-start),
+          #000 calc(100% - var(--lp-fade-end)),
+          transparent 100%);
+      animation: lp-tab-fade linear both;
+      animation-timeline: scroll(self inline);
+    }
+  }
+}
+
+/* The sample screens shared by every window. */
+.lp-demo {
+  position: relative;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  user-select: none;
+}
+
+/* Schedule: the record as a timeline of ages. */
+.lp-demo--schedule {
+  place-content: center stretch;
+}
+
+.lp-demo--schedule>* {
+  width: 100%;
+  max-width: 440px;
+  justify-self: center;
+}
+
+.lp-demo-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-sm);
+  overflow: hidden;
+}
+
+.lp-demo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--lp-line);
+  background: #ffffff;
+}
+
+.lp-demo-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lp-demo-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue-ink);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.lp-demo-title {
+  display: block;
+  color: var(--lp-ink);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.lp-demo-subtitle {
+  display: block;
+  color: var(--lp-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.lp-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue-ink);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.lp-track-container {
+  padding: 20px 8px 18px;
+  background: #ffffff;
+}
+
+.lp-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Connecting track line passing through the center of checkmark nodes (y = 12px) */
+.lp-track::before,
+.lp-track::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  height: 3px;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.lp-track::before {
+  left: 10%;
+  right: 10%;
+  background: var(--lp-line-strong);
+}
+
+/* Given doses fill the line up to the 4th stop (70%) */
+.lp-track::after {
+  left: 10%;
+  width: 60%;
+  background: var(--lp-blue);
+  transform-origin: left;
+}
+
+.lp-track-stop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 2px;
+  text-align: center;
+}
+
+.lp-track-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.lp-track-mark svg {
+  width: 14px;
+  height: 14px;
+  color: #ffffff;
+}
+
+/* The page's dose marks: a royal-blue disc for a given dose, an amber ring for the one that is due. */
+.is-given .lp-track-mark {
+  background: var(--lp-blue);
+}
+
+.is-due .lp-track-mark {
+  border: 2px solid var(--lp-amber-line);
+  background: var(--lp-amber-bg);
+}
+
+.lp-track-due-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lp-amber-line);
+}
+
+.lp-track-age {
+  color: var(--lp-ink);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "zero" 0;
+}
+
+.is-due .lp-track-age {
+  color: var(--lp-amber-ink);
+}
+
+.lp-track-vaccines {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 4px;
+  color: var(--lp-muted);
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}
+
+.lp-track-vtag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.lp-vsep {
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+/* The hero record's "Next due" strip, set into the foot of the schedule card. */
+.lp-demo-card .lp-record-next {
+  margin: 0 14px 14px;
+}
+
+/* Booking: open sessions as a short list. */
+.lp-demo--booking {
+  gap: 8px;
+  place-content: center stretch;
+}
+
+.lp-slot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+  justify-self: center;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--lp-line);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-sm);
+}
+
+.lp-slot-day {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--lp-pale);
+  color: var(--lp-blue-ink);
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+.lp-slot-time {
+  color: var(--lp-ink);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lp-slot-left {
+  color: var(--lp-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.lp-slot.is-picked {
+  border-color: var(--lp-blue);
+  box-shadow: 0 0 0 3px rgb(6 72 239 / 0.14), 0 8px 18px -10px rgb(6 72 239 / 0.5);
+}
+
+.lp-slot.is-picked .lp-slot-day {
+  background: var(--lp-blue);
+  color: #ffffff;
+}
+
+.lp-slot.is-full {
+  box-shadow: none;
+  background: transparent;
+  border-style: dashed;
+}
+
+.lp-slot.is-full .lp-slot-time,
+.lp-slot.is-full .lp-slot-day {
+  color: var(--lp-muted);
+  background: transparent;
+}
+
+/* Certificate: a paper with its QR and the check result. */
+.lp-cert {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px 16px;
+  width: 220px;
+  padding: 16px;
+  border: 1px solid var(--lp-line);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-lg);
+  rotate: -2.5deg;
+}
+
+.lp-cert-title {
+  grid-column: 1 / -1;
+  color: var(--lp-ink);
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
+
+.lp-cert-line {
+  align-self: start;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--lp-pale-2);
+}
+
+.lp-cert-line--short {
+  width: 64%;
+}
+
+.lp-cert-qr {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  width: 54px;
+  height: 54px;
+}
+
+.lp-cert-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--lp-ink);
+}
+
+/* The scanner's line: invisible at rest, it crosses the code once when the window opens (see Motion). */
+.lp-cert-qr::after {
+  content: "";
+  position: absolute;
+  inset: 0 -5px auto;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--lp-blue);
+  box-shadow: 0 2px 8px rgb(6 72 239 / 0.45);
+  opacity: 0;
+}
+
+.lp-cert-check {
+  position: absolute;
+  right: calc(50% - 132px);
+  bottom: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 5px;
+  border: 1px solid #b4e2c6;
+  border-radius: 999px;
+  background: var(--lp-green-bg);
+  color: var(--lp-green-ink);
+  font-weight: 800;
+  box-shadow: var(--lp-shadow-sm);
+}
+
+.lp-cert-check circle {
+  fill: var(--lp-green-ink);
+}
+
+/* Queue: the waiting-room screen. */
+.lp-demo--queue {
+  justify-items: center;
+  gap: 2px;
+}
+
+.lp-demo--queue::before {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  max-width: 280px;
+  margin-inline: auto;
+  border-radius: 14px;
+  background: var(--lp-navy);
+  box-shadow: var(--lp-shadow-lg);
+}
+
+.lp-demo--queue>* {
+  position: relative;
+}
+
+.lp-queue-label {
+  color: #9fb2dd;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* One line tall: the called ticket and the one before it share the cell, and the window hides whichever is out. */
+.lp-queue-roll {
+  display: grid;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.lp-queue-roll>* {
+  grid-area: 1 / 1;
+}
+
+.lp-queue-was {
+  translate: 0 -110%;
+}
+
+.lp-queue-station {
+  color: #a9c1ff;
+  font-weight: 700;
+}
+
+.lp-queue-waiting {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.lp-queue-waiting span {
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 6px;
+  color: #c3cde4;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Messages: two notes from the clinic. */
+.lp-demo--messages {
+  gap: 10px;
+  place-content: center stretch;
+}
+
+.lp-msg {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  max-width: 290px;
+  justify-self: center;
+  padding: 10px 14px;
+  border: 1px solid var(--lp-line);
+  border-radius: 14px 14px 14px 4px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-sm);
+}
+
+.lp-msg--care {
+  translate: 18px 0;
+  border-radius: 14px;
+}
+
+.lp-msg-from {
+  color: var(--lp-blue);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.lp-msg-text {
+  color: var(--lp-ink);
+  font-weight: 600;
+}
+
+.lp-demo--queue,
+.lp-demo--certificate {
+  min-height: 188px;
+  padding: 24px;
+}
+
+/* ── The record trail: how one dose reaches the family ───────────────────── */
+
+.lp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 30em;
+  margin-top: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--lp-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-sm);
+  color: var(--lp-text);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.lp-note svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--lp-blue);
+}
+
+.lp-note strong {
+  color: var(--lp-ink);
+}
+
+.lp-trail {
+  position: relative;
+  display: grid;
+  gap: 20px;
+}
+
+/* The thread runs from each node to the next one and stops at the last; drawn in blue as it scrolls into view. */
+.lp-trail-entry:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 60px;
+  bottom: -32px;
+  left: 23px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--lp-blue);
+  transform-origin: top;
+}
+
+.lp-trail-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.lp-trail-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--lp-line), var(--lp-shadow-sm);
+}
+
+.lp-trail-node svg {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+.lp-trail-node circle {
+  fill: var(--lp-blue);
+}
+
+.lp-trail-node path {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The last stop is the family account itself, so it carries the eVacTrack mark. */
+.lp-trail-node .lp-trail-brand {
+  width: 32px;
+  height: 32px;
+}
+
+.lp-trail-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lp-trail-burst i {
+  --a: calc(var(--k) * 45deg + 22deg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px;
+  border-radius: 999px;
+  background: var(--lp-blue);
+  opacity: 0;
+}
+
+.lp-trail-burst i:nth-child(3n + 2) {
+  background: var(--lp-amber-line);
+}
+
+.lp-trail-burst i:nth-child(3n) {
+  width: 5px;
+  height: 5px;
+  margin: -2.5px;
+  background: #1fa463;
+}
+
+.lp-trail-card {
+  display: grid;
+  gap: 8px;
+  padding: 20px clamp(20px, 2.5vw, 28px) 22px;
+  border: 1px solid var(--lp-line);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: var(--lp-shadow-sm);
+}
+
+.lp-trail-card>p:last-child {
+  color: var(--lp-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 1024px) {
+  .lp-trail {
+    gap: 24px;
+    padding-top: 8px;
+  }
+
+  .lp-trail-entry:nth-child(2) {
+    margin-left: 24px;
+  }
+
+  .lp-trail-entry:nth-child(3) {
+    margin-left: 48px;
+  }
+
+  /* The thread follows the entries' stepped indent. */
+  .lp-trail-entry:not(:last-child)::before {
+    display: none;
+  }
+
+  /* The same blue thread as on phones, bent to follow the indent. */
+  .lp-trail-entry:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 60px;
+    bottom: -36px;
+    left: 23px;
+    width: 26px;
+    border-bottom: 2px solid var(--lp-blue);
+    border-left: 2px solid var(--lp-blue);
+    border-bottom-left-radius: 14px;
+  }
+}
+
+/* ── How it works: three numbered stops on one line ──────────────────────── */
+
+.lp-steps {
+  display: grid;
+  gap: 28px;
+}
+
+.lp-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  column-gap: 20px;
+  row-gap: 8px;
+  align-content: start;
+}
+
+.lp-steps li> :not(.lp-step-number) {
+  grid-column: 2;
+}
+
+.lp-step-number {
+  position: relative;
+  z-index: 1;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--lp-blue);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--lp-blue);
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.lp-steps li:first-child .lp-step-number {
+  background: var(--lp-blue);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -10px rgb(6 72 239 / 0.7);
+}
+
+.lp-steps .lp-h3 {
+  padding-top: 14px;
+}
+
+.lp-steps p {
+  max-width: 26em;
+  color: var(--lp-muted);
+  font-size: 1rem;
+}
+
+/* Phones: a vertical thread from one number to the next. */
+.lp-steps li:not(:last-child)::before,
+.lp-steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 60px;
+  bottom: -24px;
+  left: 27px;
+  width: 2px;
+  border-radius: 2px;
+}
+
+.lp-steps li:not(:last-child)::before {
+  background: var(--lp-line-strong);
+}
+
+.lp-steps li:not(:last-child)::after {
+  background: var(--lp-blue);
+  transform-origin: top;
+}
+
+@media (min-width: 768px) {
+  .lp-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+  }
+
+  .lp-steps li {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+  }
+
+  .lp-steps li> :not(.lp-step-number) {
+    grid-column: 1;
+  }
+
+  .lp-step-number {
+    grid-row: auto;
+    margin-bottom: 14px;
+  }
+
+  .lp-steps .lp-h3 {
+    padding-top: 0;
+  }
+
+  /* Wide: the thread runs across, from this number to the next. */
+  .lp-steps li:not(:last-child)::before,
+  .lp-steps li:not(:last-child)::after {
+    top: 27px;
+    bottom: auto;
+    left: 68px;
+    right: -28px;
+    width: auto;
+    height: 2px;
+  }
+
+  .lp-steps li:not(:last-child)::after {
+    transform-origin: left;
+  }
+}
+
+/* ── Clinics ─────────────────────────────────────────────────────────────── */
+
+.lp-directory {
+  align-self: start;
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(11 26 58 / 0.04), 0 18px 40px -24px rgb(11 26 58 / 0.25);
+}
+
+.lp-directory-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 16px clamp(20px, 3vw, 32px);
+  border-bottom: 1px solid var(--lp-line);
+  background: var(--lp-pale);
+  color: var(--lp-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.lp-directory-count .tnum {
+  color: var(--lp-ink);
+  font-weight: 800;
+}
+
+.lp-directory-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: clamp(28px, 4vw, 40px) clamp(20px, 3vw, 32px);
+}
+
+.lp-directory-empty>svg {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 8px;
+  padding: 11px;
+  border-radius: 12px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue);
+}
+
+.lp-directory-empty p {
+  max-width: 32em;
+  color: var(--lp-muted);
+}
+
+.lp-clinic {
+  display: grid;
+  gap: 14px;
+  padding: clamp(22px, 3vw, 32px);
+}
+
+.lp-clinic+.lp-clinic {
+  border-top: 1px solid var(--lp-line);
+}
+
+.lp-clinic dl {
+  display: grid;
+  gap: 8px;
+}
+
+.lp-clinic dl>div {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 1rem;
+  color: var(--lp-text);
+}
+
+.lp-clinic dt svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--lp-blue);
+}
+
+.lp-clinic dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lp-clinic dd a {
+  display: inline-flex;
+  min-height: 24px;
+  color: var(--lp-blue-ink);
+  font-weight: 700;
+}
+
+.lp-clinic .lp-btn {
+  justify-self: start;
+}
+
+.lp-clinic dd {
+  max-width: 34em;
+}
+
+.lp-clinic-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023px),
+(min-width: 1280px) {
+  .lp-clinic {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 32px;
+  }
+}
+
+/* ── Privacy and access: a ruled table like the card ─────────────────────── */
+
+.lp-access {
+  display: grid;
+  gap: 24px;
+}
+
+.lp-access-card {
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(11 26 58 / 0.04), 0 18px 40px -24px rgb(11 26 58 / 0.25);
+}
+
+.lp-access-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.lp-access-table thead th {
+  padding: 14px 12px;
+  background: var(--lp-pale);
+  color: var(--lp-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.lp-access-table thead th:first-child {
+  padding-left: clamp(16px, 2.5vw, 24px);
+  text-align: left;
+}
+
+.lp-access-table tbody th,
+.lp-access-table td {
+  padding: 18px 12px;
+  border-top: 1px solid var(--lp-line);
+}
+
+.lp-access-table tbody th {
+  padding-left: clamp(16px, 2.5vw, 24px);
+  color: var(--lp-ink);
+  font-weight: 700;
+  text-align: left;
+}
+
+.lp-who {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lp-who>svg {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue);
+}
+
+.lp-access-table tbody th small {
+  display: block;
+  margin-top: 2px;
+  color: var(--lp-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.lp-access-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.lp-mark {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.lp-mark--yes svg {
+  width: 24px;
+  height: 24px;
+}
+
+.lp-mark--no>span[aria-hidden] {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--lp-line-strong);
+}
+
+.lp-mark--role {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--lp-pale-2);
+  color: var(--lp-blue-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Narrow screens: each person becomes a block with labelled answers. */
+@media (max-width: 639px) {
+
+  .lp-access-table,
+  .lp-access-table tbody,
+  .lp-access-table tr,
+  .lp-access-table th,
+  .lp-access-table td {
+    display: block;
+  }
+
+  .lp-access-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .lp-access-table tbody tr {
+    padding: 18px 16px 10px;
+  }
+
+  .lp-access-table tbody tr+tr {
+    border-top: 1px solid var(--lp-line);
+  }
+
+  .lp-access-table tbody th {
+    padding: 0 0 12px;
+    border: 0;
+  }
+
+  /* Staff access is the same answer in every column; the note under their name already says it. */
+  .lp-access-table tr.is-role td {
+    display: none;
+  }
+
+  .lp-access-table tr.is-role th {
+    padding-bottom: 8px;
+  }
+
+  .lp-access-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0 8px 48px;
+    border-top: 1px dashed var(--lp-line);
+    color: var(--lp-text);
+    text-align: left;
+  }
+
+  .lp-access-table td::before {
+    content: attr(data-label);
+    font-size: 0.9375rem;
+  }
+}
+
+.lp-access-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 40em;
+  font-size: 1rem;
+  color: var(--lp-muted);
+}
+
+.lp-access-note strong {
+  color: var(--lp-ink);
+}
+
+.lp-access-note svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--lp-blue);
+}
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+
+.lp-faq-list {
+  border-top: 1px solid var(--lp-line-strong);
+}
+
+.lp-faq-list details {
+  border-bottom: 1px solid var(--lp-line-strong);
+}
+
+.lp-faq-list summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 72px;
+  padding-block: 16px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--lp-ink);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  transition: color 180ms var(--lp-ease);
+}
+
+.lp-faq-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-list summary:focus-visible {
+  outline: 3px solid var(--lp-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.lp-faq-list summary:hover {
+  color: var(--lp-blue-ink);
+}
+
+.lp-faq-list summary svg {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  padding: 9px;
+  border: 1px solid var(--lp-line-strong);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--lp-blue);
+  transition:
+    transform 260ms var(--lp-ease),
+    background-color 200ms var(--lp-ease),
+    color 200ms var(--lp-ease),
+    border-color 200ms var(--lp-ease);
+}
+
+.lp-faq-list summary:hover svg {
+  border-color: var(--lp-blue);
+}
+
+.lp-faq-list details[open] summary svg {
+  transform: rotate(45deg);
+  border-color: var(--lp-blue);
+  background: var(--lp-blue);
+  color: #ffffff;
+}
+
+/* Answers are immediately readable when opened by keyboard or pointer. */
+.lp-faq-list details::details-content {
+  block-size: 0;
+  overflow: clip;
+}
+
+.lp-faq-list details[open]::details-content {
+  block-size: auto;
+}
+
+.lp-faq-answer p {
+  max-width: 40em;
+  padding: 0 56px 24px 0;
+  color: var(--lp-text);
+  font-size: 1.0625rem;
+}
+
+@media (max-width: 639px) {
+  .lp-faq-list summary {
+    font-size: 1.0625rem;
+  }
+
+  .lp-faq-answer p {
+    padding-right: 0;
+  }
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────────── */
+/* The card gets filled in. Every movement on this page is one of the paper Immunization Card's three gestures: a line
+ * is ruled (draw), a mark is stamped (stamp), an entry is written in (rise, slide, wipe). The arrival performs all
+ * three; each section below answers with the one gesture that tells its own story, and each service window plays its
+ * screen's own behaviour when it opens. Groups marked `data-reveal` that start below the fold are held on their first
+ * frame by landing-motion.tsx until they scroll into view, then play once. Everything sits inside
+ * `prefers-reduced-motion: no-preference`, the global reduced-motion rule in globals.css removes it as well, and every
+ * element's resting state is its final, visible state. */
+
+@keyframes lp-swoosh {
+  from {
+    clip-path: inset(-40% 100% -40% -6%);
+  }
+
+  to {
+    clip-path: inset(-40% -6% -40% -6%);
+  }
+}
+
+@keyframes lp-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes lp-sheen {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes lp-ring {
+  from {
+    box-shadow: 0 0 0 0 rgb(6 72 239 / 0.45), var(--lp-shadow-sm);
+  }
+
+  to {
+    box-shadow: 0 0 0 18px rgb(6 72 239 / 0), var(--lp-shadow-sm);
+  }
+}
+
+@keyframes lp-burst {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--a)) translateY(0) scale(0.5);
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-36px) scale(1);
+  }
+}
+
+@keyframes lp-write-in {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(28px);
+  }
+}
+
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes lp-settle {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(8px);
+  }
+}
+
+@keyframes lp-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lp-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(-14deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes lp-due {
+  0% {
+    box-shadow: 0 0 0 0 rgb(242 163 58 / 0.55);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px rgb(242 163 58 / 0);
+  }
+}
+
+@keyframes lp-draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes lp-draw-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes lp-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Clip reveals name both ends, because a shape cannot interpolate to `none`. They fill backwards only, so no clip
+ * outlives its animation to cut off a focus ring or a shadow. */
+@keyframes lp-rule {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes lp-drop {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes lp-slide {
+  from {
+    opacity: 0;
+    translate: -14px 0;
+  }
+}
+
+/* Booking: the slot starts unpicked, is pressed, and settles picked. */
+@keyframes lp-pick {
+  0% {
+    border-color: var(--lp-line);
+    box-shadow: var(--lp-shadow-sm);
+  }
+
+  35% {
+    scale: 0.97;
+  }
+}
+
+@keyframes lp-pick-day {
+  from {
+    background: var(--lp-pale);
+    color: var(--lp-blue-ink);
+  }
+}
+
+@keyframes lp-cert-in {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+    rotate: -9deg;
+  }
+}
+
+@keyframes lp-scan {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+
+  15%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    translate: 0 52px;
+  }
+}
+
+@keyframes lp-roll-in {
+  from {
+    translate: 0 110%;
+  }
+}
+
+@keyframes lp-roll-out {
+  from {
+    translate: 0 0;
+  }
+}
+
+@keyframes lp-queue-shift {
+  from {
+    translate: calc(100% + 6px) 0;
+  }
+}
+
+@keyframes lp-queue-join {
+  from {
+    opacity: 0;
+    translate: calc(100% + 6px) 0;
+  }
+}
+
+@keyframes lp-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* 1. The arrival: the copy is written in, the arch settles, and the sample notes land one after another; the given
+   * dose stamps as its note lands and the due note calls twice. */
+  .lp-hero-copy>* {
+    animation: lp-rise 640ms var(--lp-ease) both;
+  }
+
+  .lp-hero-copy> :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .lp-hero-copy> :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .lp-hero-copy> :nth-child(4) {
+    animation-delay: 180ms;
+  }
+
+  .lp-hero-copy> :nth-child(5) {
+    animation-delay: 240ms;
+  }
+
+  .lp-hero-visual::before {
+    animation: lp-fade 900ms var(--lp-ease) 240ms both;
+  }
+
+  .lp-hero-arch {
+    animation: lp-rise 800ms var(--lp-ease) 120ms both;
+  }
+
+  .lp-hero-arch img {
+    animation: lp-settle 1100ms var(--lp-ease) 200ms both;
+  }
+
+  /* Once landed, each note floats on its own slow breath. */
+  .lp-hero-chip {
+    animation:
+      lp-rise 560ms var(--lp-ease) calc(600ms + var(--n) * 140ms) both,
+      lp-float 6s ease-in-out calc(1600ms + var(--n) * 900ms) infinite;
+  }
+
+  .lp-hero-check {
+    animation: lp-stamp 460ms var(--lp-ease) 860ms both;
+  }
+
+  .lp-hero-chip--due .lp-hero-chip-icon {
+    animation: lp-due 1200ms ease-out 1100ms 2;
+  }
+
+  /* The headline's key words are underlined as the copy settles. */
+  .lp-h1-mark svg {
+    animation: lp-swoosh 760ms var(--lp-ease) 700ms backwards;
+  }
+
+  /* The hero's call to action catches the light once, after everything has arrived. */
+  .lp-hero .lp-btn--primary::after {
+    animation: lp-sheen 1000ms var(--lp-ease) 1700ms;
+  }
+
+  /* Depth: the arch, the photograph inside it and each note lean toward a fine pointer by different amounts. */
+  .lp-hero-arch,
+  .lp-hero-arch img,
+  .lp-hero-chip {
+    transition: translate 700ms var(--lp-ease);
+  }
+
+  .lp-hero-arch {
+    translate: calc(var(--px, 0) * 8px) calc(var(--py, 0) * 6px);
+  }
+
+  .lp-hero-arch img {
+    translate: calc(var(--px, 0) * -12px) 0;
+  }
+
+  .lp-hero-chip {
+    translate: calc(var(--px, 0) * var(--depth, 18px)) calc(var(--py, 0) * var(--depth, 18px) * 0.6);
+  }
+
+  .lp-hero-chip--due {
+    --depth: 26px;
+  }
+
+  .lp-hero-chip--verified {
+    --depth: 13px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .lp-btn--primary:hover::after {
+      transform: translateX(120%);
+      transition: transform 760ms var(--lp-ease);
+    }
+  }
+
+  /* The sample replays when opened; tab controls and explanatory text remain immediate. */
+
+  /* Schedule: the line is ruled from birth to 14 weeks at an even pen speed, each given dose stamps as the line reaches
+   * it (every 300ms), then the due dose arrives and calls, and the next-due strip follows. */
+  .lp-panel:not([hidden]) .lp-demo-card {
+    animation: lp-rise 460ms var(--lp-ease) both;
+  }
+
+  .lp-panel:not([hidden]) .lp-track::after {
+    animation: lp-draw-x 900ms linear 260ms both;
+  }
+
+  .lp-panel:not([hidden]) .is-given .lp-track-mark {
+    animation: lp-stamp 420ms var(--lp-ease) both;
+    animation-delay: calc(260ms + var(--i) * 300ms);
+  }
+
+  .lp-panel:not([hidden]) .is-due .lp-track-mark {
+    animation:
+      lp-pop 380ms var(--lp-ease) 1200ms both,
+      lp-due 1200ms ease-out 1500ms 2;
+  }
+
+  .lp-panel:not([hidden]) .lp-demo-card .lp-record-next {
+    animation: lp-rise 460ms var(--lp-ease) 1350ms both;
+  }
+
+  /* Booking: the open sessions list in, then Thursday morning is pressed and picked. */
+  .lp-panel:not([hidden]) .lp-slot {
+    animation: lp-slide 440ms var(--lp-ease) both;
+  }
+
+  .lp-panel:not([hidden]) .lp-slot:nth-child(2) {
+    animation-delay: 90ms;
+  }
+
+  .lp-panel:not([hidden]) .lp-slot:nth-child(3) {
+    animation-delay: 180ms;
+  }
+
+  .lp-panel:not([hidden]) .lp-slot.is-picked {
+    animation:
+      lp-slide 440ms var(--lp-ease) 90ms both,
+      lp-pick 480ms var(--lp-ease) 720ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-slot.is-picked .lp-slot-day {
+    animation: lp-pick-day 280ms var(--lp-ease) 860ms both;
+  }
+
+  /* Certificate: the paper is laid down, a scan line crosses its code, and the result stamps on. */
+  .lp-panel:not([hidden]) .lp-cert {
+    animation: lp-cert-in 560ms var(--lp-ease) both;
+  }
+
+  .lp-panel:not([hidden]) .lp-cert-qr::after {
+    animation: lp-scan 760ms ease-in-out 560ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-cert-check {
+    animation: lp-stamp 460ms var(--lp-ease) 1280ms both;
+  }
+
+  /* Queue: the screen comes up, the called number rolls over to the next ticket, and the waiting line moves up. */
+  .lp-panel:not([hidden]) .lp-demo--queue {
+    animation: lp-rise 460ms var(--lp-ease) both;
+  }
+
+  .lp-panel:not([hidden]) .lp-queue-was {
+    animation: lp-roll-out 520ms var(--lp-ease) 620ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-queue-ticket {
+    animation: lp-roll-in 520ms var(--lp-ease) 620ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-queue-waiting>span {
+    animation: lp-queue-shift 520ms var(--lp-ease) 700ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-queue-waiting>span:last-child {
+    animation-name: lp-queue-join;
+  }
+
+  /* Messages: two notes arrive one after the other, the way they reach the account. */
+  .lp-panel:not([hidden]) .lp-msg {
+    transform-origin: 0 100%;
+    animation: lp-msg-in 460ms var(--lp-ease) 120ms both;
+  }
+
+  .lp-panel:not([hidden]) .lp-msg--care {
+    animation-delay: 640ms;
+  }
+
+  /* 3. The record trail: the dose travels. Each stop stamps, its card is written in, and the thread draws on to the
+   * next stop. The last stop is the family account. */
+  .lp-trail-entry:nth-child(2) {
+    --step: 1;
+  }
+
+  .lp-trail-entry:nth-child(3) {
+    --step: 2;
+  }
+
+  .lp-trail-node {
+    animation: lp-stamp 460ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 560ms);
+  }
+
+  .lp-trail-card {
+    animation: lp-slide 560ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 560ms + 120ms);
+  }
+
+  .lp-trail-entry::before {
+    animation: lp-draw-y 420ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 560ms + 220ms);
+  }
+
+  .lp-trail-entry::after {
+    animation: lp-drop 420ms var(--lp-ease) backwards;
+    animation-delay: calc(var(--step, 0) * 560ms + 220ms);
+  }
+
+  /* The dose arrives in the family account: the last stop rings out and a few dose-mark dots burst from it. */
+  .lp-trail-entry:last-child .lp-trail-node {
+    animation:
+      lp-stamp 460ms var(--lp-ease) both,
+      lp-ring 1000ms ease-out;
+    animation-delay: calc(var(--step, 0) * 560ms), calc(var(--step, 0) * 560ms + 300ms);
+  }
+
+  .lp-trail-burst i {
+    animation: lp-burst 820ms cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--step, 0) * 560ms + 260ms);
+  }
+
+  /* 4. Three steps: each number stamps, its words follow, and the track is ruled on to the next number. */
+  .lp-steps li:nth-child(2) {
+    --step: 1;
+  }
+
+  .lp-steps li:nth-child(3) {
+    --step: 2;
+  }
+
+  .lp-step-number {
+    animation: lp-stamp 460ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 520ms);
+  }
+
+  .lp-steps li> :not(.lp-step-number) {
+    animation: lp-rise 520ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 520ms + 120ms);
+  }
+
+  .lp-steps li::after {
+    animation: lp-draw-x 360ms var(--lp-ease) both;
+    animation-delay: calc(var(--step, 0) * 520ms + 180ms);
+  }
+
+  @media (max-width: 767px) {
+    .lp-steps li::after {
+      animation-name: lp-draw-y;
+    }
+  }
+
+  /* 5. The directory: the listing is written in, one health center after another. */
+  .lp-directory {
+    animation: lp-fade 420ms var(--lp-ease) both;
+  }
+
+  .lp-clinic {
+    animation: lp-slide 520ms var(--lp-ease) both;
+    animation-delay: calc(140ms + var(--n, 0) * 70ms);
+  }
+
+  /* 6. Who can see the record: the table is marked like an inspected card, cell by cell and row by row. */
+  .lp-access-table tbody tr:nth-child(2) {
+    --r: 1;
+  }
+
+  .lp-access-table tbody tr:nth-child(3) {
+    --r: 2;
+  }
+
+  .lp-access-table td:nth-of-type(2) {
+    --c: 1;
+  }
+
+  .lp-access-table td:nth-of-type(3) {
+    --c: 2;
+  }
+
+  .lp-access-table .lp-mark {
+    --at: calc(200ms + (var(--r, 0) * 3 + var(--c, 0)) * 70ms);
+  }
+
+  .lp-access-table .lp-mark--yes {
+    animation: lp-stamp 420ms var(--lp-ease) var(--at) both;
+  }
+
+  .lp-access-table .lp-mark--no>span[aria-hidden] {
+    animation: lp-draw-x 320ms var(--lp-ease) var(--at) both;
+  }
+
+  .lp-access-table .lp-mark--role {
+    animation: lp-pop 360ms var(--lp-ease) var(--at) both;
+  }
+
+  /* 7. Questions: each rule is drawn across with its question, top to bottom. */
+  .lp-faq-list details {
+    animation: lp-rule 620ms var(--lp-ease) backwards;
+    animation-delay: calc(80ms + var(--n, 0) * 80ms);
+  }
+
+}
+
+/* Scroll-linked touches, where the browser supports them; elsewhere the page simply rests. They follow the scroll, not
+ * the clock, so landing-motion.tsx leaves them alone. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* Each section heading is written in as it scrolls up into view. */
+    .lp-section .lp-h2 {
+      animation: lp-write-in linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 25%;
+    }
+  }
+}
+
+/* A small landing-page companion; kept clear of the account actions. */
+.lp .lp-nurse-mascot {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 20;
+  border-radius: 50%;
+}
+
+.lp .lp-nurse-mascot button {
+  border-radius: inherit;
+}
+
+.lp .lp-nurse-mascot button:focus-visible {
+  outline: 3px solid var(--lp-blue, #0648ef);
+  outline-offset: 4px;
+}
+
+@media (max-width: 639px) {
+  .lp .lp-nurse-mascot {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .lp .lp-nurse-mascot button {
+    width: 80px !important;
+    height: 80px !important;
+  }
+}

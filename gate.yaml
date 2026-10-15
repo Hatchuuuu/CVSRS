@@ -1,0 +1,15 @@
+version: "1.0"
+gates:
+  l1_report_only:
+    require_approval: false
+    auto_merge: false
+    notify: true
+
+  l2_autofix_pr:
+    require_approval: true
+    approvers_count: 1
+    checks_required:
+      - loop-verifier
+      - test-suite
+    denylists:
+      - docs/safety.md

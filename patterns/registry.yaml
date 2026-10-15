@@ -1,0 +1,33 @@
+version: "1.0"
+patterns:
+  daily-triage:
+    name: Daily Triage
+    description: Triage recent changes, CI failures, issues, and conversations.
+    cadence: 1d
+    level: L1
+    skills:
+      - loop-triage
+      - loop-budget
+      - loop-constraints
+    verifier: loop-verifier
+    safety_policy: docs/safety.md
+
+  ci-sweeper:
+    name: CI Sweeper
+    description: Scan build logs and flaky test reports to draft minimal repair commits.
+    cadence: 12h
+    level: L1
+    skills:
+      - loop-triage
+    verifier: loop-verifier
+    safety_policy: docs/safety.md
+
+  security-audit:
+    name: Security Audit
+    description: Scan dependencies and security advisories for vulnerabilities.
+    cadence: 1d
+    level: L1
+    skills:
+      - loop-constraints
+    verifier: loop-verifier
+    safety_policy: docs/safety.md

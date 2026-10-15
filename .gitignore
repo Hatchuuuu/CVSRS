@@ -1,0 +1,20 @@
+node_modules/
+.next/
+.next-e2e/
+.worktrees/
+.local/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+test-results/
+playwright-report/
+
+# Design review screenshots (local only)
+.impeccable/review/
+# Generated from pinned npm packages by postinstall.
+/public/ocr/
+tmp/
+*.log
+output/

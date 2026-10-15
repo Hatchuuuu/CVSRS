@@ -1,0 +1,31 @@
+{
+  "nodes": [
+    { "id": "fonts_readme_certificate_font", "label": "Certificate font", "file_type": "document", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L1", "rationale": "Bundles the font to avoid runtime font downloads or Python dependencies." },
+    { "id": "fonts_readme_noto_sans_sc", "label": "NotoSansSC.ttf", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L3" },
+    { "id": "fonts_readme_google_fonts", "label": "Google Fonts Noto Sans SC", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L3", "source_url": "https://github.com/google/fonts/tree/main/ofl/notosanssc", "captured_at": "2026-10-01" },
+    { "id": "fonts_readme_fonttools", "label": "FontTools 4.63.0", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5" },
+    { "id": "fonts_readme_fontkit", "label": "fontkit 2", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5" },
+    { "id": "fonts_readme_pdf_lib_adapter", "label": "pdf-lib compatibility adapter", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5" },
+    { "id": "fonts_notosanssc_license_sil_open_font_license", "label": "SIL Open Font License 1.1", "file_type": "document", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\NotoSansSC-LICENSE.txt", "source_location": "L9", "source_url": "https://scripts.sil.org/OFL" },
+    { "id": "fonts_notosanssc_license_adobe", "label": "Adobe copyright 2014–2021", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\NotoSansSC-LICENSE.txt", "source_location": "L1" },
+    { "id": "fonts_notosanssc_license_source_reserved_name", "label": "Source reserved font name", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\NotoSansSC-LICENSE.txt", "source_location": "L1" },
+    { "id": "app_icon_svg", "label": "Application SVG icon", "file_type": "image", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\app\\icon.svg", "source_location": "L1" },
+    { "id": "app_icon_blue_rounded_square", "label": "Blue rounded square", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\app\\icon.svg", "source_location": "L2" },
+    { "id": "app_icon_two_stroked_paths", "label": "White and light-blue stroked paths", "file_type": "concept", "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\app\\icon.svg", "source_location": "L4–5" }
+  ],
+  "edges": [
+    { "source": "fonts_readme_certificate_font", "target": "fonts_readme_noto_sans_sc", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L3", "weight": 1.0 },
+    { "source": "fonts_readme_noto_sans_sc", "target": "fonts_readme_google_fonts", "relation": "cites", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L3", "weight": 1.0 },
+    { "source": "fonts_readme_noto_sans_sc", "target": "fonts_notosanssc_license_sil_open_font_license", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L3", "weight": 1.0 },
+    { "source": "fonts_readme_noto_sans_sc", "target": "fonts_readme_fonttools", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5", "weight": 1.0 },
+    { "source": "fonts_readme_noto_sans_sc", "target": "fonts_readme_fontkit", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5", "weight": 1.0 },
+    { "source": "fonts_readme_fontkit", "target": "fonts_readme_pdf_lib_adapter", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\README.md", "source_location": "L5", "weight": 1.0 },
+    { "source": "fonts_notosanssc_license_sil_open_font_license", "target": "fonts_notosanssc_license_adobe", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\NotoSansSC-LICENSE.txt", "source_location": "L1–3", "weight": 1.0 },
+    { "source": "fonts_notosanssc_license_adobe", "target": "fonts_notosanssc_license_source_reserved_name", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\lib\\certificates\\fonts\\NotoSansSC-LICENSE.txt", "source_location": "L1", "weight": 1.0 },
+    { "source": "app_icon_svg", "target": "app_icon_blue_rounded_square", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\app\\icon.svg", "source_location": "L2", "weight": 1.0 },
+    { "source": "app_icon_svg", "target": "app_icon_two_stroked_paths", "relation": "references", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "C:\\Users\\Nitro\\Desktop\\CVSRS\\src\\app\\icon.svg", "source_location": "L4–5", "weight": 1.0 }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
