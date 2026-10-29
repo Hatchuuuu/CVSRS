@@ -1,6 +1,9 @@
+import { personName } from "@/lib/person-name";
+import { Baby, Building2, CalendarDays, ClipboardCheck, FileText, ShieldCheck } from "lucide-react";
+import { RefreshRecord } from "./refresh-record";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BackLink, ChildBanner, EmptyState, Notice, Section, StatusChip, recordStatusChip } from "@/components/ui";
+import { BackLink, EmptyState, Section, StatusChip, recordStatusChip } from "@/components/ui";
 import { ScheduleView, type ScheduleRequirement } from "@/components/schedule-view";
 import { formatClinicDate, formatDate } from "@/lib/format";
 import { staffRoleLabel } from "@/lib/staff-roles";
@@ -91,12 +94,29 @@ export default async function GuardianChild({ params }: { params: Promise<{ chil
   return (
     <>
       <BackLink href="/children">My children</BackLink>
-      <ChildBanner name={child.displayName} recordNo={child.localRecordNo} meta={child.clinicName ?? undefined} chips={recordStatusChip(child.recordStatus)} />
+      <header className="mb-6 rounded-card border border-line bg-surface p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary"><Baby aria-hidden className="size-6" /></span>
+            <h1 className="min-w-0 break-words text-2xl font-bold tracking-tight text-ink sm:text-3xl">{personName(child.displayName)}</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">{recordStatusChip(child.recordStatus)}</div>
+        </div>
+        <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-line pt-4 text-sm sm:grid-cols-3">
+          <div><dt className="flex items-center gap-2 text-ink-soft"><FileText aria-hidden className="size-4" />Record number</dt><dd className="mt-1 break-words font-semibold text-ink">{child.localRecordNo}</dd></div>
+          <div><dt className="flex items-center gap-2 text-ink-soft"><Building2 aria-hidden className="size-4" />Health center</dt><dd className="mt-1 break-words font-semibold text-ink">{child.clinicName ?? "Not assigned"}</dd></div>
+          <div><dt className="flex items-center gap-2 text-ink-soft"><CalendarDays aria-hidden className="size-4" />Birth date</dt><dd className="mt-1 font-semibold text-ink">{child.dob ? formatDate(child.dob) : "Clinic to confirm"}</dd></div>
+        </dl>
+      </header>
 
       {!full ? (
-        <Notice tone="review" title="Waiting for the clinic to verify you">
-          The schedule and vaccination history appear here after clinic staff confirm that you are this child&apos;s guardian. Bring an ID to the clinic.
-        </Notice>
+        <section aria-labelledby="verification-h" className="mb-8 rounded-card border border-line bg-surface p-5 sm:p-6">
+          <div className="flex items-start gap-3"><ShieldCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-primary" /><div><h2 id="verification-h" className="text-lg font-bold text-ink">Waiting for the clinic to verify you</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">You can prepare your vaccination card now. Clinical history and shared care notes unlock after the clinic verifies your guardian access.</p></div></div>
+          <ol className="my-5 grid gap-4 sm:grid-cols-3">
+            {[{ Icon: FileText, title: "Bring your records", text: "Bring an ID and any available vaccination card or child records." }, { Icon: ClipboardCheck, title: "Visit your health center", text: "Staff check your child's details and your relationship to the child." }, { Icon: ShieldCheck, title: "Check your record", text: "After verification, view vaccinations, next steps and care instructions here." }].map(({ Icon, title, text }) => <li key={title} className="flex gap-3 border-t border-line pt-3 sm:block"><Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-primary sm:mb-2" /><div><h3 className="text-sm font-semibold text-ink">{title}</h3><p className="mt-1 text-sm leading-relaxed text-ink-soft">{text}</p></div></li>)}
+          </ol>
+          <RefreshRecord />
+        </section>
       ) : (
         <div className="space-y-10">
           {queue ? (
@@ -209,7 +229,7 @@ export default async function GuardianChild({ params }: { params: Promise<{ chil
           </Section>
 
           {notes && notes.length ? <Section id="notes-h" title="Notes from the clinic" description="Observations and follow-up information written by clinic staff. Contact the clinic if symptoms worsen or you are worried.">
-            <ul className="divide-y divide-line rounded-control border border-line bg-surface">{notes.map((note) => <li key={note.noteId} className="p-4"><p className="whitespace-pre-wrap break-words">{note.note}</p><p className="mt-1 text-sm text-ink-soft">{note.authorName}{note.authorRole ? ` · ${staffRoleLabel(note.authorRole)}` : ""} · {note.clinicName} · {formatClinicDate(note.createdAt, clinicTimezone)}</p>{note.eventId ? <a href={`#event-${note.eventId}`}>Related vaccination</a> : null}</li>)}</ul>
+            <ul className="divide-y divide-line rounded-control border border-line bg-surface">{notes.map((note) => <li key={note.noteId} className="p-4"><p className="whitespace-pre-wrap break-words">{note.note}</p><p className="mt-1 text-sm text-ink-soft">{personName(note.authorName)}{note.authorRole ? ` · ${staffRoleLabel(note.authorRole)}` : ""} · {note.clinicName} · {formatClinicDate(note.createdAt, clinicTimezone)}</p>{note.eventId ? <a href={`#event-${note.eventId}`}>Related vaccination</a> : null}</li>)}</ul>
           </Section> : null}
 
           <Section id="cert-h" title="Certificates" description="A clinic-issued record of the vaccinations the clinic has checked. Whether another institution accepts it is that institution's decision.">
@@ -260,9 +280,10 @@ export default async function GuardianChild({ params }: { params: Promise<{ chil
 
         </div>
       )}
-      <Section id="rep-h" title="Vaccination card" description="Enter the card manually or take/upload a photo. Check all extracted details before sending them for clinic review.">
+      <section aria-labelledby="rep-h" className="mt-8 rounded-card border border-line bg-surface p-5 sm:p-6">
+        <div className="mb-6"><h2 id="rep-h" className="text-xl font-bold text-ink">Vaccination card</h2><p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-soft">Add entries from your paper card, then send them for clinic review. Submitted entries count only after the clinic verifies them.</p></div>
         <VaccinationCard childId={childId} submissions={cards ?? []} />
-      </Section>
+      </section>
     </>
   );
 }

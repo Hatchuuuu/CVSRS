@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { personName } from "@/lib/person-name";
 import { PASSWORD_MAX_BYTES, PASSWORD_MIN_LENGTH } from "@/lib/auth/password-policy";
 
 /** Roles a person can apply for or be granted (the database's role vocabulary). */
@@ -36,7 +37,7 @@ export const submitApplicationBody = staffApplicationFields;
 
 export const createStaffAccountBody = z
   .object({
-    fullName: z.string().trim().min(1, "Enter the staff member's full name.").max(120),
+    fullName: z.string().trim().min(1, "Enter the staff member's full name.").max(120).transform(personName),
     email: z.email("Enter a valid email address.").max(200),
     temporaryPassword: z.string().min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters.`).refine((value) => new TextEncoder().encode(value).length <= PASSWORD_MAX_BYTES, "The password is too long."),
     role: z.enum(STAFF_ROLE_CODES),

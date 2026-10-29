@@ -9,6 +9,7 @@ import { ConfigError, getConfig, type DataMode } from "@/lib/env";
 import { securityPageFor } from "@/lib/auth/redirect";
 import { clinicLandingRoute } from "@/lib/auth/destination";
 import { clinicAccessFor } from "@/lib/auth/clinic-access";
+import { personName } from "@/lib/person-name";
 
 export interface Membership {
   membershipId: string;
@@ -49,6 +50,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const session = await rpc.session();
   const context = session ? await rpc.rpc<MyContext>("get_my_context") : null;
   const ctx = context?.status === "active" ? context : null;
+  if (ctx?.displayName) ctx.displayName = personName(ctx.displayName);
   return { rpc, session, ctx, mode: cfg.mode };
 });
 

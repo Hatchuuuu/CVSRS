@@ -23,9 +23,18 @@ function href(html: string, text: string) {
 }
 
 describe("worklists expose the next page of existing records", () => {
+  it("distinguishes an empty older message page from a new inbox", async () => {
+    stubs.rpc.mockImplementation(async (name: string) => name === "my_messages" ? { unread: 0, items: [] } : name === "my_children" ? [] : null);
+    const first = renderToStaticMarkup(await Messages({}));
+    expect(first).toContain("No messages yet");
+    const older = renderToStaticMarkup(await Messages({ searchParams: Promise.resolve({ before: at, beforeId: id(50) }) }));
+    expect(older).toContain("No older messages");
+    expect(older).not.toContain("No messages yet");
+    expect(href(older, "Newest messages").pathname).toBe("/messages");
+  });
   it("links messages after the last visible message, keeping the lookahead hidden", async () => {
     stubs.rpc.mockImplementation(async (name: string) => name === "my_messages" ? { unread: 51, items: Array.from({ length: 51 }, (_, i) => ({ id: id(i + 1), kind: "test", title: `Message ${i + 1}`, body: "Fixture", childId: null, createdAt: at, read: false })) } : name === "my_children" ? [] : null);
-    const html = renderToStaticMarkup(await Messages());
+    const html = renderToStaticMarkup(await Messages({}));
     expect(html).toContain("Message 50");
     expect(html).not.toContain("Message 51");
     const next = href(html, "Older messages");

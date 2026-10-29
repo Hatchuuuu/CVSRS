@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useState, type FormEvent } from "react";
@@ -195,7 +197,7 @@ export function EditIdentity({ clinicId, childId, version, initial }: { clinicId
   return (
     <form onSubmit={submit}>
       <div className="grid gap-x-4 sm:grid-cols-2">
-        <TextField id="e-name" name="displayName" label="Full name" defaultValue={initial.displayName} error={fe["patch.displayName"]} />
+        <TextField id="e-name" name="displayName" label="Full name" defaultValue={personName(initial.displayName)} error={fe["patch.displayName"]} />
         <TextField id="e-dob" name="dob" type="date" label="Date of birth" defaultValue={initial.dob} error={fe["patch.dob"]} />
         <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="clearDob" className="size-5" /> Mark birth date as unknown</label>
         <TextField id="e-addr" name="addressText" label="Address" defaultValue={initial.addressText} />

@@ -50,6 +50,14 @@ export function AddChildForm({ clinics }: { clinics: Clinic[] }) {
       child: {
         givenNames: v("givenNames"),
         familyName: v("familyName"),
+        sex: v("sex"),
+        addressText: [
+          v("streetAddress"),
+          v("barangay") ? `Barangay ${v("barangay")}` : undefined,
+          v("cityMunicipality"),
+          v("province"),
+          v("postalCode"),
+        ].filter(Boolean).join(", ") || undefined,
         dobPrecision: precision,
         dob: precision === "exact" ? v("dob") : undefined,
         estimatedBirthStart: precision === "estimated" ? v("estStart") : undefined,
@@ -66,7 +74,7 @@ export function AddChildForm({ clinics }: { clinics: Clinic[] }) {
   }
 
   return (
-    <form onSubmit={submit} className="card-elevated p-5 sm:p-6 shadow-xs">
+    <form onSubmit={submit} className="rounded-card border border-line bg-surface p-5 sm:p-6">
       <SelectField id="clinicId" name="clinicId" label="Clinic" required error={fieldErrors.clinicId} value={clinicId} onChange={(e) => setClinicId(e.target.value)}>
         {clinics.map((c) => (
           <option key={c.id} value={c.id}>
@@ -89,6 +97,22 @@ export function AddChildForm({ clinics }: { clinics: Clinic[] }) {
           <TextField id="estEnd" name="estEnd" type="date" label="Latest possible birth date" required />
         </>
       ) : null}
+      <SelectField id="child-sex" name="sex" label="Sex for clinical reference (optional)" defaultValue="not_recorded" error={fieldErrors["child.sex"]}>
+        <option value="not_recorded">Not recorded</option>
+        <option value="female">Female</option>
+        <option value="male">Male</option>
+      </SelectField>
+      <fieldset className="mb-5 min-w-0 rounded-control border border-line p-4" aria-describedby="child-address-hint">
+        <legend className="px-1 text-base font-semibold text-ink">Child&apos;s home address</legend>
+        <p id="child-address-hint" className="mb-4 text-sm text-ink-soft">Enter where your child currently lives. Leave unknown details blank; the clinic can help verify them.</p>
+        <div className="grid gap-x-4 sm:grid-cols-2">
+          <TextField id="child-province" name="province" label="Province (optional)" maxLength={80} autoComplete="address-level1" placeholder="e.g. Negros Oriental" />
+          <TextField id="child-city" name="cityMunicipality" label="City / municipality (optional)" maxLength={80} autoComplete="address-level2" placeholder="e.g. Dumaguete City" />
+          <TextField id="child-barangay" name="barangay" label="Barangay (optional)" maxLength={80} autoComplete="address-level3" placeholder="e.g. Bunao" />
+          <TextField id="child-postal" name="postalCode" label="Postal code (optional)" maxLength={20} autoComplete="postal-code" />
+        </div>
+        <TextField id="child-street" name="streetAddress" label="House / lot, street, sitio or purok (optional)" maxLength={120} autoComplete="street-address" error={fieldErrors["child.addressText"]} />
+      </fieldset>
       <SelectField id="relationship" name="relationship" label="Your relationship to the child" defaultValue="mother">
         {REL.map(([v, l]) => (
           <option key={v} value={v}>
@@ -129,7 +153,7 @@ export function LinkRequestForm({ clinics }: { clinics: Clinic[] }) {
   }
   const fieldErrors = state.phase === "error" ? (state.error.fieldErrors ?? {}) : {};
   return (
-    <form onSubmit={submit} className="card-elevated p-5 sm:p-6 shadow-xs">
+    <form onSubmit={submit} className="rounded-card border border-line bg-surface p-5 sm:p-6">
       <SelectField id="link-clinic" name="clinicId" label="Clinic" required value={clinicId} onChange={(e) => setClinicId(e.target.value)}>
         {clinics.map((c) => (
           <option key={c.id} value={c.id}>

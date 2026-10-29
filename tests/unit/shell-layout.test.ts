@@ -16,7 +16,7 @@ vi.mock("@/lib/server/viewer", () => ({
 vi.mock("@/lib/db/local", () => ({ isDemoDatabase: async () => stub.demo }));
 vi.mock("@/lib/env", () => ({ getConfig: () => ({ localDbUrl: "postgresql://demo" }) }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers(stub.nonce ? { "x-nonce": stub.nonce } : {}) }));
-vi.mock("next/navigation", () => ({ usePathname: () => stub.path, useRouter: () => ({ refresh() {}, push() {} }) }));
+vi.mock("next/navigation", () => ({ usePathname: () => stub.path, useSearchParams: () => new URLSearchParams(), useRouter: () => ({ refresh() {}, push() {} }) }));
 vi.mock("next/font/google", () => ({ Comfortaa: () => ({ variable: "--font-comfortaa" }), Nunito: () => ({ variable: "--font-nunito" }) }));
 vi.mock("@/components/toaster", () => ({ AppToaster: () => null }));
 
@@ -95,13 +95,14 @@ describe("root layout shell", () => {
   });
 
   it.each(["tech_admin", "clinical_staff", "bhw"])("keeps parent navigation out of the %s header", async (role) => {
+    stub.path = role === "tech_admin" ? "/developer/c1/staff" : "/clinic/c1/today";
     stub.viewer = viewer(0, [{ membershipId: "m1", clinicId: "c1", clinicName: "Clinic", clinicTimezone: "Asia/Manila", role, status: "active", validUntil: null, capabilities: role === "tech_admin" ? ["admin.users"] : ["bhw.followup"] }]);
     const html = await render();
     expect(html).not.toContain(">My Children<");
     expect(html).not.toContain(">Care Info<");
-    expect(html).toContain(role === "tech_admin" ? ">Admin console<" : ">Follow-up list<");
+    expect(html).toContain(role === "tech_admin" ? ">Developer Console<" : ">Follow-up list<");
     expect(html).toContain('aria-label="Workspace sidebar"');
-    expect(html).toContain('href="/account"');
+    expect(html).toContain(`href="/account?portal=${role === "tech_admin" ? "developer" : "clinic"}&amp;clinic=c1"`);
   });
 
   it("keeps family navigation for parent accounts", async () => {

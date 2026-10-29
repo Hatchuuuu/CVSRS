@@ -28,7 +28,7 @@ describe("shell controls", () => {
   });
 
   it("collapses the clinic navigation into a labelled disclosure below lg (UI-02)", () => {
-    const items = Array.from({ length: 13 }, (_, i) => ({ href: i === 0 ? "/clinic/c1/today" : `/clinic/c1/item${i}`, label: i === 0 ? "Today" : `Item ${i}`, icon: "today" as const }));
+    const items = Array.from({ length: 13 }, (_, i) => ({ href: i === 0 ? "/clinic/c1/today" : `/clinic/c1/item${i}`, label: i === 0 ? "Today" : `Item ${i}`, icon: "today" as const, group: "daily" as const }));
     const html = renderToStaticMarkup(createElement(StaffNav, { items }));
     expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*aria-controls="[^"]+"[^>]*>[\s\S]*Clinic menu/);
     expect(html).toContain("Today");

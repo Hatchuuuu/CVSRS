@@ -1,3 +1,4 @@
+import { personName } from "@/lib/person-name";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmptyState, PageTitle, StatusChip } from "@/components/ui";
@@ -52,7 +53,7 @@ export default async function StaffAccess({ params }: { params: Promise<{ clinic
               <li key={r.membershipId} className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-bold">
-                    {r.displayName || "(no name)"} <span className="font-normal text-ink-soft">— {staffRoleLabel(r.role)}</span>
+                    {personName(r.displayName || "(no name)")} <span className="font-normal text-ink-soft">— {staffRoleLabel(r.role)}</span>
                   </p>
                   <StatusChip tone={chip.tone}>{chip.label}</StatusChip>
                 </div>

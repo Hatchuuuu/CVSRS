@@ -21,7 +21,7 @@ describe("server page read failures", () => {
   it("rejects an unavailable message inbox instead of displaying no messages", async () => {
     stubs.requireViewer.mockResolvedValue({ rpc: { rpc: () => Promise.resolve(null) } });
     const { default: Messages } = await import("@/app/messages/page");
-    await expect(Messages()).rejects.toThrow("Messages could not be loaded");
+    await expect(Messages({})).rejects.toThrow("Messages could not be loaded");
   });
 
   it("rejects a failed clinic queue read instead of showing zero patients", async () => {
@@ -38,8 +38,8 @@ describe("server page read failures", () => {
       return Promise.reject(new Error("notice unavailable"));
     });
     stubs.requireViewer.mockResolvedValue({ rpc: { rpc } });
-    const { default: MyChildren } = await import("@/app/children/page");
-    await expect(MyChildren()).rejects.toThrow("notice unavailable");
+    const { default: RegisterChild } = await import("@/app/children/register/page");
+    await expect(RegisterChild()).rejects.toThrow("notice unavailable");
   });
 
   it("reports failed public clinic discovery instead of claiming no clinic is listed", async () => {

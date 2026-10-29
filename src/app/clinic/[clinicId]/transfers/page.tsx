@@ -1,3 +1,4 @@
+import { personName } from "@/lib/person-name";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -65,7 +66,7 @@ export default async function Transfers({ params }: { params: Promise<{ clinicId
                       <>
                         {x.childId ? (
                           <Link href={`/clinic/${clinicId}/children/${x.childId}`} className="text-primary">
-                            {x.childName}
+                            {personName(x.childName)}
                           </Link>
                         ) : (
                           x.childName
@@ -103,7 +104,7 @@ export default async function Transfers({ params }: { params: Promise<{ clinicId
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-bold">
                     <Link href={`/clinic/${clinicId}/children/${x.childId}`} className="text-primary">
-                      {x.childName}
+                      {personName(x.childName)}
                     </Link>{" "}
                     <span className="tnum font-normal text-ink-soft">· {x.recordNo}</span> <span className="font-normal text-ink-soft">to {x.toClinic}</span>
                   </p>
@@ -119,7 +120,7 @@ export default async function Transfers({ params }: { params: Promise<{ clinicId
                       label="Release the record"
                       path={`${base}/${x.id}/release`}
                       confirm={{
-                        text: `Release ${x.childName}'s record to ${x.toClinic}? ${x.toClinic} can then see the child's name and take over the record. When they accept, the enrollment moves there, future bookings here are cancelled and the family is told.`,
+                        text: `Release ${personName(x.childName)}'s record to ${x.toClinic}? ${x.toClinic} can then see the child's name and take over the record. When they accept, the enrollment moves there, future bookings here are cancelled and the family is told.`,
                         yes: "Yes, release the record",
                         no: "Not now",
                       }}

@@ -12,7 +12,7 @@ export default async function FindOrRegister({ params }: { params: Promise<{ cli
   if (!caps.has("child.search")) {
     return (
       <>
-        <PageTitle title="Find or register a child" />
+        <PageTitle dashboard title="Find or register a child" />
         <Notice tone="info" title="No patient records for your role">
           Your role does not include patient lookup at this clinic. Use the menu for the tasks you can do.
         </Notice>
@@ -21,7 +21,7 @@ export default async function FindOrRegister({ params }: { params: Promise<{ cli
   }
   return (
     <>
-      <PageTitle title="Find or register a child" lead="Search first, so nobody is registered twice. A birth certificate, phone or account is never required." />
+      <PageTitle dashboard title="Find or register a child" lead="Search first, so nobody is registered twice. A birth certificate, phone or account is never required." />
       <div className="space-y-10">
         <Section id="find-h" title="Find a child" className="border-t-0 pt-0">
           <ChildSearch clinicId={clinicId} />

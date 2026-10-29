@@ -118,7 +118,7 @@ describe("clinical setup pages read in parallel", () => {
   });
 });
 
-describe("My Children privacy notices", () => {
+describe("child registration privacy notices", () => {
   it("lets a failed batch notice read reach the error boundary with no per-clinic fallback", async () => {
     const rpc = vi.fn((name: string) => {
       if (name === "my_children") return Promise.resolve([]);
@@ -127,7 +127,7 @@ describe("My Children privacy notices", () => {
       return Promise.resolve({ configured: false, acknowledged: true });
     });
     stubs.requireViewer.mockResolvedValue({ rpc: { rpc } });
-    const { default: MyChildren } = await import("@/app/children/page");
+    const { default: MyChildren } = await import("@/app/children/register/page");
     await expect(MyChildren()).rejects.toThrow("notices unavailable");
     expect(rpc.mock.calls.map(([name]) => name)).not.toContain("get_privacy_notice");
   });
@@ -135,8 +135,8 @@ describe("My Children privacy notices", () => {
   it("makes one privacy read per page load", async () => {
     const rpc = vi.fn((name: string) => Promise.resolve(name === "list_public_clinics" ? [{ id: "a", name: "A" }] : []));
     stubs.requireViewer.mockResolvedValue({ rpc: { rpc } });
-    const { default: MyChildren } = await import("@/app/children/page");
+    const { default: MyChildren } = await import("@/app/children/register/page");
     await MyChildren();
-    expect(rpc.mock.calls.map(([name]) => name).sort()).toEqual(["get_pending_privacy_notices", "list_public_clinics", "my_children"]);
+    expect(rpc.mock.calls.map(([name]) => name).sort()).toEqual(["get_pending_privacy_notices", "list_public_clinics"]);
   });
 });

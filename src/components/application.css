@@ -1,0 +1,132 @@
+/* Operational surfaces only: CSS can remain loaded after a client-side visit home. */
+body:not(:has(.landing-page)) {
+  --radius-card: 0.5rem;
+  --radius-control: 0.375rem;
+}
+
+body:not(:has(.landing-page)) #main {
+  overflow-wrap: anywhere;
+}
+
+body:not(:has(.landing-page)) #main table {
+  overflow-wrap: normal;
+}
+
+body:not(:has(.landing-page)) .app-page-title {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+body:not(:has(.landing-page)) .app-page-title h1 {
+  font-size: 1.75rem;
+  line-height: 1.25;
+}
+
+body:not(:has(.landing-page)) .app-page-title p {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+body:not(:has(.landing-page)) .app-section > :first-child {
+  align-items: center;
+}
+
+body:not(:has(.landing-page)) :is(.app-card, .app-section) :is(.app-card, .app-section) {
+  border-radius: 0;
+  border-width: 0;
+  border-top: 1px solid var(--color-line);
+  padding-inline: 0;
+  box-shadow: none;
+}
+
+body:not(:has(.landing-page)) [data-workspace-navigation] :is(aside, nav) a[aria-current="page"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border-color: transparent;
+}
+
+body:not(:has(.landing-page)) [data-workspace-navigation] a[aria-current="page"] svg {
+  color: currentColor;
+}
+
+body:not(:has(.landing-page)) [data-workspace-navigation] a {
+  border-radius: var(--radius-control);
+}
+
+body:not(:has(.landing-page)) #main :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+  scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  accent-color: var(--color-primary);
+  caret-color: var(--color-primary);
+}
+
+body:not(:has(.landing-page)) #main textarea {
+  min-height: 7rem;
+  padding: 0.75rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+body:not(:has(.landing-page)) #main :is(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+body:not(:has(.landing-page)) #main [role="region"][tabindex="0"]:has(table) {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--color-line-strong) var(--color-sunken);
+}
+
+body:not(:has(.landing-page)) #main table:not([data-paper-form]) {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+body:not(:has(.landing-page)) #main table:not([data-paper-form]) thead th {
+  background: var(--color-sunken);
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  vertical-align: bottom;
+}
+
+body:not(:has(.landing-page)) #main table:not([data-paper-form]) :is(th, td) {
+  padding: 0.875rem 1rem;
+}
+
+body:not(:has(.landing-page)) #main table:not([data-paper-form]) tbody tr:focus-within {
+  background: var(--color-primary-soft);
+}
+
+body:not(:has(.landing-page)) .family-records > li {
+  padding: 1.5rem;
+}
+
+body:not(:has(.landing-page)) .family-records h2 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body:not(:has(.landing-page)) #main table:not([data-paper-form]) tbody tr:hover {
+    background: var(--color-sunken);
+  }
+}
+
+@media (max-width: 639px) {
+  body:not(:has(.landing-page)) .app-page-title h1 {
+    font-size: 1.5rem;
+  }
+
+  body:not(:has(.landing-page)) .app-page-title {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  body:not(:has(.landing-page)) .family-records > li {
+    padding: 1.25rem;
+  }
+}
+

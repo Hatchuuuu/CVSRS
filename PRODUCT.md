@@ -25,7 +25,9 @@ Records are entered and reviewed by the child's own clinic, and guardian access 
 - Families sign up online or register in person; the clinic verifies the guardian relationship.
 - Families bring the paper Immunization Card to visits; staff check differences against the digital record.
 - Public, unauthenticated surfaces: landing page, sign-in, sign-up, password recovery, live waiting-room queue display per clinic (`/display/[clinicId]`), certificate authenticity check (`/verify/[token]`, reached from a QR code), and the legal documents (`/terms`, `/privacy`, `/accessibility`).
-- Signed-in family surfaces: My Children, Care information (clinic-published, second-person reviewed), Messages, Security (two-step sign-in).
+- Parents Portal: My Children, Vaccination records, Appointments, Care information (clinic-published, second-person reviewed), Messages and Settings / Account. Registration and clinic-record linking open as dedicated tasks from My Children.
+- Clinics Portal: capability-based daily work, records/review and management groups under `/clinic/[clinicId]`. Clinical leads retain independent clinical approvals; BHWs retain their permitted registration and follow-up scope.
+- Developer Console: `/developer` and assigned-clinic technical workspaces for active technical administrators, with staff provisioning/access, clinic settings, operations evidence and a sanitized technical audit. This is not a global database-owner role; clinical authority and independent approvals remain separate.
 
 ## Capabilities and Constraints
 

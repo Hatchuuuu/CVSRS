@@ -20,7 +20,7 @@ async function staffFirstSignIn(page: Page, who: string, clinicId: string) {
   // Clinic records stay closed until the second step is set up.
   await expect(page).toHaveURL(/\/account\/security/);
   const secret = await enrolTotp(page);
-  await expect(page).toHaveURL(new RegExp(`/clinic/${clinicId}`));
+  await expect(page).toHaveURL(new RegExp(who === "admin" ? `/developer/${clinicId}/staff` : `/clinic/${clinicId}`));
   writeState({ totp: { [who]: secret } });
 }
 
@@ -50,7 +50,7 @@ test("each first staff member must enrol two-step sign-in before the clinic work
     const context = await browser.newContext();
     const page = await context.newPage();
     await staffFirstSignIn(page, who, clinicId!);
-    await expect(page.getByText("E2E Health Center").first()).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Workspace sidebar" }).getByText("E2E Health Center", { exact: true })).toBeVisible();
     await context.close();
   }
 });

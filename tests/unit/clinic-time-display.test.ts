@@ -50,13 +50,28 @@ describe("staff time entry defaults to clinic time", () => {
   it("fills “Actual time given” with Manila wall time on a device set to UTC and names the zone", async () => {
     vi.useFakeTimers({ now: new Date("2026-09-30T23:00:00Z"), toFake: ["Date"] });
     const { AdministerPanel, ExceptionForm } = await import("@/app/clinic/[clinicId]/children/[childId]/administration");
-    const html = renderToStaticMarkup(createElement(AdministerPanel, { clinicId: "c", clinicTimezone: "Asia/Manila", encounterId: "e", childName: "Child", recordNo: "R", lots: [lot], locations }));
+    const html = renderToStaticMarkup(createElement(AdministerPanel, { clinicId: "c", clinicTimezone: "Asia/Manila", initialClinicTime: "2026-10-01T07:00", encounterId: "e", childName: "Child", recordNo: "R", lots: [lot], locations }));
     expect(html).toContain('value="2026-10-01T07:00"');
     expect(html).toContain('max="2026-10-01T07:00"');
     expect(html).toContain("Clinic time (Asia/Manila)");
-    const exception = renderToStaticMarkup(createElement(ExceptionForm, { clinicId: "c", clinicTimezone: "Asia/Manila", childId: "k", encounterId: null, products: [], lots: [lot], locations }));
+    const exception = renderToStaticMarkup(createElement(ExceptionForm, { clinicId: "c", clinicTimezone: "Asia/Manila", initialClinicTime: "2026-10-01T07:00", childId: "k", encounterId: null, products: [], lots: [lot], locations }));
     expect(exception).toContain('value="2026-10-01T07:00"');
     expect(exception).toContain("Clinic time (Asia/Manila)");
+  });
+
+  it("keeps administration input snapshots identical across a hydration minute boundary", async () => {
+    vi.useFakeTimers({ now: new Date("2026-10-17T22:25:59Z"), toFake: ["Date"] });
+    const { AdministerPanel, ExceptionForm } = await import("@/app/clinic/[clinicId]/children/[childId]/administration");
+    const props = { clinicId: "c", clinicTimezone: "Asia/Manila", initialClinicTime: "2026-10-18T06:25", encounterId: "e", childId: "k", childName: "Child", recordNo: "R", products: [], lots: [lot], locations };
+    const renderForms = () => [renderToStaticMarkup(createElement(AdministerPanel, props)), renderToStaticMarkup(createElement(ExceptionForm, props))];
+    const before = renderForms();
+    vi.setSystemTime(new Date("2026-10-17T22:26:01Z"));
+    const after = renderForms();
+    expect(after).toEqual(before);
+    for (const html of after) {
+      expect(html).toContain('value="2026-10-18T06:25"');
+      expect(html).toContain('max="2026-10-18T06:25"');
+    }
   });
 
   it("fills a cold-chain reading time with clinic wall time and names the zone", async () => {
@@ -105,7 +120,7 @@ describe("family screens show clinic time", () => {
       },
     });
     const { default: Messages } = await import("@/app/messages/page");
-    const html = renderToStaticMarkup(await Messages());
+    const html = renderToStaticMarkup(await Messages({}));
     const { formatClinicDateTime } = await import("@/lib/format");
     expect(html).toContain(formatClinicDateTime(EARLY_MORNING, "Asia/Manila"));
     expect(html).toMatch(/Oct 2, 2026|2 Oct 2026/);

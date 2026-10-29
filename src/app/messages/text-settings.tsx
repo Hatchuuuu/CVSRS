@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import type { FormEvent } from "react";
+import { useSyncExternalStore, type FormEvent } from "react";
 import { Button, Notice, ResultRegion, SelectField, TextField } from "@/components/ui";
 import { useMutation } from "@/lib/client/api";
 
@@ -14,6 +14,7 @@ export interface ContactPrefs {
 }
 
 export function TextSettings({ prefs }: { prefs: ContactPrefs }) {
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const router = useRouter();
   const save = useMutation<ContactPrefs>("/api/v1/me/contact-preferences");
   const toggle = useMutation<ContactPrefs>("/api/v1/me/contact-preferences");
@@ -30,9 +31,11 @@ export function TextSettings({ prefs }: { prefs: ContactPrefs }) {
   return (
     <div className="space-y-6">
       <p className="text-ink-soft">
-        Text messages are optional and short. They never contain your child&apos;s name, vaccines or health details: they only tell you to open the app. You will always get the same information here in Messages.
+        The clinic can use your phone number to contact you. Clinic updates remain available in Messages.
       </p>
-      <form onSubmit={savePhone} className="max-w-lg">
+      <form method="post" onSubmit={savePhone} className="max-w-lg">
+        <fieldset disabled={!hydrated} className="min-w-0">
+        <legend className="sr-only">Contact preferences</legend>
         <TextField
           id="ph"
           name="phone"
@@ -43,12 +46,12 @@ export function TextSettings({ prefs }: { prefs: ContactPrefs }) {
           error={fe?.phone}
           autoComplete="tel"
         />
-        <SelectField id="lang" name="language" label="Language" defaultValue={prefs.language} hint="Filipino wording is not available yet; messages are sent in English.">
+        <SelectField id="lang" name="language" label="Clinic message language" defaultValue={prefs.language} hint="Filipino wording is not available yet; messages are sent in English.">
           <option value="en">English</option>
           <option value="fil">Filipino</option>
         </SelectField>
-        <Button type="submit" variant="secondary" disabled={save.state.phase === "pending"}>
-          Save
+        <Button type="submit" variant="secondary" disabled={!hydrated || save.state.phase === "pending"}>
+          Save contact preferences
         </Button>
         <ResultRegion>
           {save.state.phase === "error" ? (
@@ -58,24 +61,23 @@ export function TextSettings({ prefs }: { prefs: ContactPrefs }) {
           ) : null}
           {save.state.phase === "success" ? <Notice tone="success" role="status" title="Saved" /> : null}
         </ResultRegion>
+        </fieldset>
       </form>
 
-      {!prefs.hasPhone ? null : !prefs.phoneChecked ? (
-        <Notice tone="review" title="The clinic still has to check your number">
-          Show your phone to clinic staff on your next visit. After they confirm it is yours you can turn text messages on here.
-        </Notice>
-      ) : (
+      {/* Only none and sandbox providers are implemented; neither delivers real texts. */}
+      <Notice tone="info" title="Text delivery is unavailable">Keep checking Messages for clinic updates. Your phone number can still be used for clinic contact.</Notice>
+      {!prefs.smsOptIn ? null : (
         <div>
-          <p className="mb-2 font-semibold">Text messages are {prefs.smsOptIn ? "on" : "off"}.</p>
+          <p className="mb-2 font-semibold">Your account has text messages enabled.</p>
           <Button
-            variant={prefs.smsOptIn ? "secondary" : "primary"}
-            disabled={toggle.state.phase === "pending"}
+            variant="secondary"
+            disabled={!hydrated || toggle.state.phase === "pending"}
             onClick={async () => {
-              const r = await toggle.run({ smsOptIn: !prefs.smsOptIn });
+              const r = await toggle.run({ smsOptIn: false });
               if (r?.ok) router.refresh();
             }}
           >
-            {prefs.smsOptIn ? "Turn text messages off" : "Turn text messages on"}
+            Turn text messages off
           </Button>
           <ResultRegion>
             {toggle.state.phase === "error" ? (

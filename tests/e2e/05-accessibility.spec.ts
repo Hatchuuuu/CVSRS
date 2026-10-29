@@ -44,9 +44,9 @@ for (const width of [375, 1280]) {
       const paths = {
         nurse: ["today", `children/${childId}`, "inventory", "followup", ""],
         lead: ["review", "clinical", "reports", "transfers", "questions"],
-        admin: ["admin", "access", "settings", "content", "audit"],
+        admin: ["staff", "staff/create", "settings", "operations", "audit"],
       }[who]!;
-      for (const p of paths) results.push(await scan(staff, `/clinic/${clinicId}${p ? `/${p}` : ""}`));
+      for (const p of paths) results.push(await scan(staff, who === "admin" ? `/developer/${clinicId}/${p}` : `/clinic/${clinicId}${p ? `/${p}` : ""}`));
       await context.close();
     }
 

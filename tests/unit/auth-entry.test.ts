@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   config: vi.fn(), set: vi.fn(), get: vi.fn(),
-  signIn: vi.fn(), signUp: vi.fn(), rpc: vi.fn(),
+  signIn: vi.fn(), signUp: vi.fn(), rpc: vi.fn(), kind: vi.fn(), signOut: vi.fn(),
 }));
 vi.mock("@/lib/env", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/env")>()), getConfig: state.config }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], get: state.get, set: state.set }) }));
 // The sign-up route reads the public clinic directory to validate a staff application.
 vi.mock("@/lib/db", () => ({ getRpcClient: async () => ({ session: async () => null, rpc: state.rpc }) }));
-vi.mock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { signInWithPassword: state.signIn, signUp: state.signUp } }) }));
+vi.mock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { signInWithPassword: state.signIn, signUp: state.signUp, signOut: state.signOut }, rpc: state.kind }) }));
 
 import { POST as signIn } from "@/app/auth/sign-in/route";
 import { POST as signUp } from "@/app/auth/sign-up/route";
@@ -27,6 +27,8 @@ const request = (path: string, body: unknown) => new Request(`http://localhost:3
 beforeEach(() => {
   vi.clearAllMocks();
   resetRateLimits();
+  state.kind.mockResolvedValue({ data: "family", error: null });
+  state.signOut.mockResolvedValue({ error: null });
   state.config.mockReturnValue({ mode: "supabase", production: false, supabaseUrl: "https://project.supabase.co", supabaseKey: "public-key" });
   state.signIn.mockResolvedValue({ data: { user: null }, error: { status: 400, code: "invalid_credentials", message: "Invalid login credentials" } });
 });
@@ -219,6 +221,7 @@ describe("authentication input and throttling", () => {
   it.each([["/clinic", "/clinic"], [undefined, "/children"], ["/children", "/children"], ["//evil.example", "/children"], ["/account/reset-password", "/children"]])(
     "sends a password sign-in with next=%s to %s",
     async (next, destination) => {
+      state.kind.mockResolvedValueOnce({ data: destination === "/clinic" ? "staff" : "family", error: null });
       state.config.mockReturnValue({ mode: "supabase", production: false, supabaseUrl: "https://project.supabase.co", supabaseKey: "public-key" });
       state.signIn.mockResolvedValueOnce({ data: { user: { id: userId } }, error: null });
       const response = await signIn(request("/auth/sign-in", { email: "nurse@example.com", password: "long-password", ...(next ? { next } : {}) }));
@@ -226,3 +229,26 @@ describe("authentication input and throttling", () => {
     },
   );
 });
+
+ it.each([
+  ["staff", "/children", 403, "staff account"],
+  ["family", "/clinic", 403, "family account"],
+  ["staff", "/clinic", 200, null],
+  ["family", "/children", 200, null],
+ ])("checks stored account kind %s for entry %s", async (kind, next, status, message) => {
+  state.signIn.mockResolvedValue({ data: { user: { id: userId } }, error: null });
+  state.kind.mockResolvedValue({ data: kind, error: null });
+  const response = await signIn(request("/auth/sign-in", { email: "account@example.test", password: "correct password", next }));
+  expect(response.status).toBe(status);
+  if(message) {
+   expect((await response.json()).error).toContain(message);
+   expect(state.set).not.toHaveBeenCalled();
+   expect(state.signOut).toHaveBeenCalledWith({ scope: "local" });
+  }
+ });
+ it("fails closed when account classification is unavailable", async () => {
+  state.signIn.mockResolvedValue({ data: { user: { id: userId } }, error: null });
+  state.kind.mockResolvedValue({ data: null, error: { message: "unavailable" } });
+  expect((await signIn(request("/auth/sign-in", { email: "account@example.test", password: "correct password" }))).status).toBe(503);
+  expect(state.set).not.toHaveBeenCalled();
+ });

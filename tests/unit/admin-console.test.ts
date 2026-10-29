@@ -6,7 +6,7 @@ const stub = vi.hoisted(() => ({ staff: null as unknown, notFound: vi.fn(() => {
 vi.mock("@/lib/server/viewer", () => ({ requireClinicStaff: async () => stub.staff }));
 vi.mock("next/navigation", () => ({ notFound: stub.notFound, useRouter: () => ({ refresh() {} }), usePathname: () => "/" }));
 
-import AdminConsole from "@/app/clinic/[clinicId]/admin/page";
+import { StaffConsole } from "@/components/technical/staff-console";
 
 const clinicId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const ME = "11111111-1111-4111-8111-111111111111";
@@ -37,11 +37,15 @@ function staff(caps: string[], data: { pending?: unknown; decided?: unknown; mem
     },
   };
 }
-const render = async () => renderToStaticMarkup(await AdminConsole({ params: Promise.resolve({ clinicId }) }));
+const render = async () => renderToStaticMarkup(await StaffConsole({ clinicId }));
 
 beforeEach(() => { stub.notFound.mockClear(); });
 
 describe("admin console", () => {
+  it("reports a failed decided-applications read instead of hiding the history", async () => {
+    staff(TECH_ADMIN, { decided: new Error("database unavailable") });
+    expect(await render()).toContain("Recent decisions could not be loaded");
+  });
   it("shows waiting applications with their details and the accept and decline actions", async () => {
     staff(TECH_ADMIN, { pending: [app("a1")], memberships: [membership("m1", { status: "active" })] });
     const out = await render();

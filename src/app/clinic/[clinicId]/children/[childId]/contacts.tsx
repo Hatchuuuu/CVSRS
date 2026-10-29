@@ -77,7 +77,7 @@ export function VerifyContact({ clinicId, contact }: { clinicId: string; contact
         )}
         {contact.smsOptIn ? <span className="ml-2 text-ink-soft">Text messages on</span> : null}
       </p>
-      {invalid ? <p className="mt-1 text-sm text-ink-soft">Ask the guardian for a new number; they can change it in the app under Messages.</p> : null}
+      {invalid ? <p className="mt-1 text-sm text-ink-soft">Ask the guardian for a new number; they can change it in Settings / Account under Contact preferences.</p> : null}
       {!contact.phoneChecked && !invalid ? (
         <div className="mt-1">
           <Button

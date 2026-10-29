@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 const state = vi.hoisted(() => ({ values: [] as unknown[], cursor: 0, effects: [] as (() => unknown)[], update: vi.fn(), getUser: vi.fn(), next: "A strong new password 2026", confirm: "A strong new password 2026" }));
 vi.mock("react", async (original) => ({
   ...await original<typeof import("react")>(),
+  useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot(),
   useEffect: (effect: () => unknown) => { state.effects.push(effect); },
   useState: (initial: unknown) => {
     const i = state.cursor++;

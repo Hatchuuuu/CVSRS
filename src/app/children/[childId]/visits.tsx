@@ -123,6 +123,7 @@ function Outcome<T>({ state }: { state: MutationState<T> }) {
 
 export function BookVisit({ childId, sessions, clinicTimezone }: { childId: string; sessions: OpenSession[]; clinicTimezone: string | null }) {
   const router = useRouter();
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const { state, run, reset } = useMutation(`/api/v1/appointments`);
   const open = sessions.filter((s) => s.hasRoom);
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -154,7 +155,7 @@ export function BookVisit({ childId, sessions, clinicTimezone }: { childId: stri
         <EmptyState title="No visit times are open right now">Please check again later or call the clinic.</EmptyState>
       ) : (
         <form onSubmit={submit}>
-          <fieldset className="mb-4">
+          <fieldset className="mb-4" disabled={!hydrated}>
             <legend className="mb-1 font-semibold">Choose a time</legend>
             {open.length === 0 ? <p className="text-ink-soft">All listed times are full. Please check again later or ask the clinic about walking in.</p> : null}
             {open.map((s) => (
@@ -166,7 +167,7 @@ export function BookVisit({ childId, sessions, clinicTimezone }: { childId: stri
           </fieldset>
           <TextField id="bv-reason" name="reason" label="Anything the clinic should know? (optional)" />
           <p className="mb-3 text-sm text-ink-soft">Booking reserves a place. It does not mean your child is ready for a vaccine: clinic staff check that on the day.</p>
-          <Button type="submit" disabled={state.phase === "pending" || open.length === 0}>
+          <Button type="submit" disabled={!hydrated || state.phase === "pending" || open.length === 0}>
             {state.phase === "pending" ? "Booking…" : "Book this time"}
           </Button>
         </form>
@@ -177,11 +178,12 @@ export function BookVisit({ childId, sessions, clinicTimezone }: { childId: stri
 
 export function AppointmentItem({ a, sessions, currentClinicTimezone }: { a: MyAppointment; sessions: OpenSession[]; currentClinicTimezone: string | null }) {
   const router = useRouter();
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [refreshing, startRefresh] = useTransition();
   const cancel = useMutation(`/api/v1/appointments/${a.appointmentId}/cancel`);
   const move = useMutation(`/api/v1/appointments/${a.appointmentId}/reschedule`);
   const [mode, setMode] = useState<"none" | "move" | "cancel">("none");
-  const busy = refreshing || cancel.state.phase === "pending" || move.state.phase === "pending";
+  const busy = !hydrated || refreshing || cancel.state.phase === "pending" || move.state.phase === "pending";
   const options = sessions.filter((s) => s.hasRoom && s.sessionId !== a.sessionId);
   return (
     <li className="p-3">

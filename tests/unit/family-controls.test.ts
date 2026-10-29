@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactElement } from "react";
 
 const stub = vi.hoisted(() => ({ run: vi.fn(), refresh: vi.fn(), setState: vi.fn(), refreshing: false, state: { phase: "idle" } as unknown }));
-vi.mock("react", async (original) => ({ ...await original<typeof import("react")>(), useState: (initial: unknown) => [initial, stub.setState], useTransition: () => [stub.refreshing, (action: () => void) => action()] }));
+vi.mock("react", async (original) => ({ ...await original<typeof import("react")>(), useState: (initial: unknown) => [initial, stub.setState], useTransition: () => [stub.refreshing, (action: () => void) => action()], useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: stub.refresh }) }));
 vi.mock("@/lib/client/api", () => ({ useMutation: () => ({ state: stub.state, run: stub.run }) }));
 

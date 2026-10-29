@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -22,7 +24,7 @@ export function StaffLocationForm({ clinicId, row }: { clinicId: string; row: { 
       <Button variant="quiet" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={`location-${row.membershipId}`} disabled={pending}>
         {row.barangay ? "Edit assignment" : "Add assignment"}
       </Button>
-      {open ? <form id={`location-${row.membershipId}`} aria-label={`Assignment for ${row.displayName}`} onSubmit={submit} className="mt-2 max-w-2xl rounded-control border border-line p-4">
+      {open ? <form id={`location-${row.membershipId}`} aria-label={`Assignment for ${personName(row.displayName)}`} onSubmit={submit} className="mt-2 max-w-2xl rounded-control border border-line p-4">
         <fieldset disabled={pending}>
           <legend className="mb-2 font-semibold">Assigned work location</legend>
           <p className="mb-3 text-sm text-ink-soft">Enter the staff member’s assigned barangay and city or municipality. Clear both fields to remove the assignment.</p>

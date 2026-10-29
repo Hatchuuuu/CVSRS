@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { personName } from "@/lib/person-name";
 
 // Shared by API routes and client forms. The database re-validates everything: these give early, friendly errors.
 
@@ -9,9 +10,9 @@ export const verificationMethodEnum = z.enum(["in_person_id", "clinic_record", "
 
 const childFields = z
   .object({
-    displayName: optText(200),
-    givenNames: optText(120),
-    familyName: optText(120),
+    displayName: optText(200).transform(v => v === undefined ? v : personName(v)),
+    givenNames: optText(120).transform(v => v === undefined ? v : personName(v)),
+    familyName: optText(120).transform(v => v === undefined ? v : personName(v)),
     dobPrecision: z.enum(["exact", "estimated", "unknown"]).optional(),
     dob: z.iso.date().optional(),
     estimatedBirthStart: z.iso.date().optional(),
@@ -25,8 +26,8 @@ const childFields = z
 // Patch null explicitly clears an optional field; an omitted property leaves it unchanged.
 // Registration still uses childFields and does not accept null values.
 const childPatchFields = childFields.extend({
-  givenNames: optText(120).nullable(),
-  familyName: optText(120).nullable(),
+  givenNames: optText(120).nullable().transform(v => v == null ? v : personName(v)),
+  familyName: optText(120).nullable().transform(v => v == null ? v : personName(v)),
   dob: z.iso.date().nullable().optional(),
   estimatedBirthStart: z.iso.date().nullable().optional(),
   estimatedBirthEnd: z.iso.date().nullable().optional(),
@@ -49,7 +50,7 @@ export const createProvisionalBody = z.object({ clinicId: z.uuid(), child: child
 export const linkRequestBody = z
   .object({
     clinicId: z.uuid(),
-    childName: z.string().trim().min(1, "Enter the child's name.").max(200),
+    childName: z.string().trim().min(1, "Enter the child's name.").max(200).transform(personName),
     dob: z.iso.date().optional(),
     relationship: relationshipEnum.default("other"),
     note: optText(500),
@@ -60,7 +61,7 @@ export const staffRegisterBody = z
   .object({
     child: childInput,
     guardian: z
-      .object({ fullName: z.string().trim().min(1).max(200), relationship: relationshipEnum.optional(), phone: optText(40), email: optText(200), verifiedInPerson: z.boolean().optional() })
+      .object({ fullName: z.string().trim().min(1).max(200).transform(personName), relationship: relationshipEnum.optional(), phone: optText(40), email: optText(200), verifiedInPerson: z.boolean().optional() })
       .strict()
       .optional(),
     confirmedDistinct: z.boolean().default(false),

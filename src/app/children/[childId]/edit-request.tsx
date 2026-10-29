@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import { useState, type FormEvent } from "react";
 import { Button, Notice, ResultRegion, TextField } from "@/components/ui";
 import { useMutation } from "@/lib/client/api";
@@ -30,7 +32,7 @@ export function EditRequestForm({ childId, current }: { childId: string; current
       {open ? (
         <form onSubmit={submit} className="mt-3 max-w-xl rounded-control border border-line bg-canvas p-4">
           <p className="mb-3 text-sm text-ink-soft">Fill in only what is wrong. Clinic staff will check it against your child&apos;s papers before anything changes.</p>
-          <TextField id="er-name" name="displayName" label="Correct full name" hint={`On file: ${current.displayName}`} error={fe?.["patch.displayName"]} />
+          <TextField id="er-name" name="displayName" label="Correct full name" hint={`On file: ${personName(current.displayName)}`} error={fe?.["patch.displayName"]} />
           <TextField id="er-dob" name="dob" type="date" label="Correct birth date" hint={current.dob ? `A birth date is on file: ${formatDate(current.dob)}.` : "No birth date is on file."} error={fe?.["patch.dob"]} />
           <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="clearDob" className="size-5" /> Ask to mark the birth date as unknown</label>
           <TextField id="er-addr" name="address" label="Correct address" error={fe?.["patch.addressText"]} />

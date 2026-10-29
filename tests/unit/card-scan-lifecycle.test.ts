@@ -1,7 +1,7 @@
 import { afterEach,beforeEach,expect,it,vi } from "vitest";
 import type { ChangeEvent,ReactElement } from "react";
 const hooks=vi.hoisted(()=>({values:[] as unknown[],cursor:0,create:vi.fn()}));
-vi.mock("react",async original=>({...await original<typeof import("react")>(),useEffect:vi.fn(),useState:(initial:unknown)=> { const i=hooks.cursor++; if(!(i in hooks.values)) hooks.values[i]=initial; return [hooks.values[i],(value:unknown)=> {hooks.values[i]=value;}]; },useRef:(initial:unknown)=> {const i=hooks.cursor++;return hooks.values[i]??(hooks.values[i]={current:initial});}}));
+vi.mock("react",async original=>({...await original<typeof import("react")>(),useEffect:vi.fn(),useSyncExternalStore:()=>true,useState:(initial:unknown)=> { const i=hooks.cursor++; if(!(i in hooks.values)) hooks.values[i]=initial; return [hooks.values[i],(value:unknown)=> {hooks.values[i]=value;}]; },useRef:(initial:unknown)=> {const i=hooks.cursor++;return hooks.values[i]??(hooks.values[i]={current:initial});}}));
 vi.mock("tesseract.js",()=>({createWorker:hooks.create}));
 import { CardScanner } from "@/app/children/[childId]/card-scanner";
 type Props={children?:unknown;type?:string;onChange?:(event:ChangeEvent<HTMLInputElement>)=>Promise<void>;onClick?:()=>void};

@@ -113,6 +113,8 @@ export async function signUpFamily(page: Page, name: string, email: string) {
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: /Create family account/ }).click();
   await expect(page).toHaveURL(/\/children$/);
+  await expect(page.getByRole("heading", { name: "My Children", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Account menu for/ })).toBeEnabled();
   await assertAutoConfirmed(email, since);
   await page.reload();
   await expect(page).toHaveURL(/\/children$/);
@@ -139,7 +141,9 @@ export async function signIn(page: Page, email: string, password = PASSWORD, sta
 }
 
 export async function signOut(page: Page) {
-  await page.getByRole("button", { name: /^sign out$/i }).first().click();
+  const options = page.getByRole("group", { name: "Account options" });
+  if (!(await options.isVisible())) await page.getByRole("button", { name: /^Account menu for/ }).click();
+  await options.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.getByRole("dialog", { name: "Sign out of eVacTrack?" }).getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/$|\/auth\/signed-out/);
 }
@@ -151,6 +155,7 @@ export async function enrolTotp(page: Page): Promise<string> {
   expect(secret).toMatch(/^[A-Z2-7]+=*$/);
   await page.getByLabel("6-digit code").fill(await freshTotp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
+  await waitForStaffWorkspace(page);
   return secret;
 }
 
@@ -160,7 +165,14 @@ export async function verifyTotp(page: Page, secret: string) {
   await expect(page.getByLabel("6-digit code")).toBeVisible({ timeout: 60_000 });
   await page.getByLabel("6-digit code").fill(await freshTotp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/account/security"));
+  await waitForStaffWorkspace(page);
+}
+
+async function waitForStaffWorkspace(page: Page) {
+  // The unchanged staff entry may land on the legacy admin URL before its console redirect finishes.
+  await page.waitForURL((u) => !u.pathname.startsWith("/account/security") && !/^\/clinic\/[^/]+\/admin$/.test(u.pathname));
+  await expect(page.locator("main h1")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Account menu for/ })).toBeEnabled();
 }
 
 /** The page's own alert, not Next's (empty) route announcer, which also has role="alert". */

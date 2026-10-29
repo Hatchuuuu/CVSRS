@@ -2,12 +2,24 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { createServer } from "node:net";
 
 export const ROOT = resolve(import.meta.dirname, "..");
 const SUPABASE_JS = join(ROOT, "node_modules", "supabase", "dist", "supabase.js");
 
 /** An operator-facing problem; its message is printed as is (it never contains credentials). */
 export class SetupError extends Error {}
+
+/** A wildcard probe can coexist with an occupied loopback address on Windows; check both addresses explicitly. */
+export async function requireFreeLoopbackPort(port: number): Promise<void> {
+  for (const host of ["127.0.0.1", "::1"]) {
+    await new Promise<void>((resolve, reject) => {
+      const probe = createServer();
+      probe.once("error", () => reject(new SetupError(`Port ${port} is already in use or unavailable; no existing server was stopped.`)));
+      probe.listen({ port, host, exclusive: true }, () => probe.close(() => resolve()));
+    });
+  }
+}
 
 export const PRIVILEGED_KEYS = ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "SERVICE_ROLE_KEY", "CVSRS_SMS_WEBHOOK_DB_URL", "CVSRS_OWNER_DB_URL"];
 

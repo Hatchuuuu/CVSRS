@@ -1,6 +1,8 @@
 /** Messages for the `error`, `auth` and `notice` query values that the auth routes redirect with. Shared with the staff sign-in. */
 export function signInMessages(query: { error?: string; notice?: string; auth?: string }) {
   const errors: Record<string, string> = {
+    staff_portal_required: "This is a staff account. Please use the clinic staff sign-in page.",
+    family_portal_required: "This is a family account. Please use the family sign-in page.",
     invalid_credentials: "Email or password was not recognized. Check your details and try again.",
     not_found: "Account unavailable. Please verify your details or create a new account.",
     rate_limited: "Too many attempts. Wait a moment and try again.",

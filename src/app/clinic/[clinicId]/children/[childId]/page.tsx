@@ -1,10 +1,12 @@
+import { personName } from "@/lib/person-name";
 import type { Metadata } from "next";
+import { ChevronDown } from "lucide-react";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { BackLink, ChildBanner, EmptyState, Notice, Section, StatusChip, recordStatusChip, relationshipChip } from "@/components/ui";
 import { ScheduleView, type ScheduleRequirement } from "@/components/schedule-view";
 import { OutcomeNoticeView } from "@/components/outcome-notice";
-import { formatDate } from "@/lib/format";
+import { formatDate, instantToClinicLocal } from "@/lib/format";
 import { requireClinicStaff } from "@/lib/server/viewer";
 import type { RpcName } from "@/lib/db/port";
 import { ConfirmIdentity, EditIdentity, GuardianActions, StaffQr } from "./actions";
@@ -65,6 +67,7 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
   if (!z.uuid().safeParse(childId).success) notFound();
   const caps = new Set(membership.capabilities);
   const tz = membership.clinicTimezone;
+  const initialClinicTime = instantToClinicLocal(new Date(), tz);
   async function read<T>(name: RpcName, args: Record<string, unknown>): Promise<T> {
     const data = await rpc.rpc<T>(name, args);
     if (data == null) throw new Error(`Child record data could not be loaded (${name}).`);
@@ -114,7 +117,17 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
   return (
     <>
       <BackLink href={`/clinic/${clinicId}`}>Find or register</BackLink>
-      <ChildBanner sticky name={c.displayName} recordNo={c.localRecordNo} meta={`${born} · Sex ${c.sex.replace("_", " ")}`} chips={recordStatusChip(c.recordStatus)} />
+      <ChildBanner name={personName(c.displayName)} recordNo={c.localRecordNo} meta={`${born} · Sex ${c.sex.replace("_", " ")}`} chips={recordStatusChip(c.recordStatus)} />
+      {c.addressText ? <p className="break-words text-sm text-ink-soft"><strong className="font-semibold text-ink">Home address:</strong> {c.addressText}</p> : null}
+      {c.recordStatus === "provisional" || c.guardians.some(g => g.status === "provisional") ? (
+        <Notice tone="review" title="Complete registration verification">
+          <ol className="list-decimal space-y-2 pl-5">
+            <li>{c.recordStatus === "provisional" ? <>Check the child&apos;s name, birth details and address, then {caps.has("child.register") ? <a href="#a-h" className="font-semibold underline">Confirm child identity in Record actions</a> : "ask registration-authorized staff to confirm the child's identity"}.</> : "Child identity is confirmed."}</li>
+            <li>{c.guardians.some(g => g.status === "provisional") ? <>Check the accompanying adult&apos;s identity and relationship to the child, then {caps.has("guardian.verify") ? <a href="#g-h" className="font-semibold underline">Verify this guardian in Guardians</a> : "ask verification-authorized staff to verify the guardian"}. Select the method actually used.</> : "Guardian access is verified."}</li>
+          </ol>
+          <p className="mt-2">Confirm only details the clinic has checked. Parents see clinical records after guardian access is verified.</p>
+        </Notice>
+      ) : null}
       {c.recordStatus === "inactive" ? (
         <Notice tone="attention" title="Inactive record">
           This child is no longer seen at this clinic. The history stays readable; the family gets no messages and the record cannot be booked.
@@ -126,7 +139,57 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
         </Notice>
       ) : null}
 
-      <div className="space-y-10">
+      <nav aria-label="Child record sections" className="mb-6 flex flex-wrap gap-x-5 gap-y-1 border-b border-line pb-4 text-sm">
+        {[
+          ["a-h", "Record actions"], ["g-h", "Guardians"],
+          ...(canClinical ? [["sch-h", "Schedule"]] : []),
+          ...(canSeeVisits ? [["vis-h", "Visits"]] : []),
+          ...(canClinical ? [["his-h", "Vaccination history"]] : []),
+          ["notes-h", "Staff notes"],
+          ...(caps.has("child.register") ? [["e-h", "Correct identity details"]] : []),
+        ].map(([id, label]) => <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center font-semibold text-primary">{label}</a>)}
+      </nav>
+
+      <div className="space-y-8">
+        <Section id="a-h" title="Record actions" className="border-t-0 pt-0">
+          {caps.has("child.register") ? (
+            <div className="space-y-5">
+              {/* Always mounted, so its "Identity confirmed" outcome survives the refresh that removes the button. */}
+              <ConfirmIdentity clinicId={clinicId} childId={c.childId} version={c.version} provisional={c.recordStatus === "provisional"} />
+              <StaffQr clinicId={clinicId} childId={c.childId} childName={personName(c.displayName)} />
+              {caps.has("review.resolve") ? <RecordStatus clinicId={clinicId} childId={c.childId} childName={personName(c.displayName)} recordStatus={c.recordStatus} /> : null}
+            </div>
+          ) : (
+            <p className="text-ink-soft">Your role can view identity details only.</p>
+          )}
+        </Section>
+
+        <Section id="g-h" title="Guardians" description="The child's recorded guardians and their access to family records.">
+          {!canVerifyGuardians ? <p className="mb-4 text-sm text-ink-soft">Guardian verification requires an authorized staff member. Your role does not include this action.</p> : null}
+          {/* Removed guardians leave this list, so their confirmation is shown here rather than in their row. */}
+          <OutcomeNoticeView noticeKey={`guardians:${childId}`} />
+          {c.guardians.length === 0 ? (
+            <p className="text-ink-soft">No guardian is recorded.</p>
+          ) : (
+            <ul className="divide-y divide-line rounded-control border border-line bg-surface">
+              {c.guardians.map((g) => (
+                <li key={g.relationshipId} className="p-4">
+                  <p className="font-bold">
+                    {personName(g.name)} <span className="font-normal text-ink-soft">({g.relationship.replace("_", " ")})</span>
+                  </p>
+                  <div className="my-1.5 flex flex-wrap items-center gap-2">
+                    {relationshipChip(g.status)}
+                    {g.hasAccount ? null : <span className="text-sm text-ink-soft">No app account</span>}
+                  </div>
+                  {g.phone || g.email ? <p className="tnum text-sm">{[g.phone, g.email].filter(Boolean).join(" · ")}</p> : null}
+                  {contactOf.get(g.relationshipId) ? <VerifyContact clinicId={clinicId} contact={contactOf.get(g.relationshipId)!} /> : null}
+                  {caps.has("guardian.verify") ? <GuardianActions clinicId={clinicId} childId={childId} guardianName={personName(g.name)} relationshipId={g.relationshipId} status={g.status} /> : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
         {canClinical ? <Section id="cards-h" title="Family vaccination cards" description="Check submitted card entries against documentary evidence. Approval records historical doses without issuing clinic stock.">
           {cards.length ? cards.map(card => <CardReview key={card.submissionId} clinicId={clinicId} submission={card} products={productList} canReview={canEvidence} />) : <p className="text-ink-soft">No family card submissions.</p>}
         </Section> : null}
@@ -145,19 +208,19 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
             id="give-h"
             title="Give a vaccine"
             className={canClinical ? "" : "border-t-0 pt-0"}
-            description={encounter ? "The visit is open. Check the child, then record what you gave." : "Start the visit from Today (call the child, then Start service) before recording a vaccine."}
+            description={encounter ? "The visit is open. Check the child and Schedule, then record the vaccine actually given. Dose 1, dose 2 and later steps are credited from verified history using the clinic’s approved schedule." : "Start the visit from Today (call the child, then Start service) before recording a vaccine."}
           >
             {c.recordStatus !== "active" ? (
               <Notice tone="attention" title="Confirm the child's identity first">Confirm the identity of this child (Record actions) before any care is recorded.</Notice>
             ) : encounter ? (
-              <AdministerPanel clinicId={clinicId} clinicTimezone={tz} encounterId={encounter.encounterId} childName={c.displayName} recordNo={c.localRecordNo} lots={stockLots} locations={stockLocations} />
+              <AdministerPanel clinicId={clinicId} clinicTimezone={tz} initialClinicTime={initialClinicTime} encounterId={encounter.encounterId} childName={personName(c.displayName)} recordNo={c.localRecordNo} lots={stockLots} locations={stockLocations} />
             ) : (
               <EmptyState title="No open visit for this child">The queue creates the visit when service starts. If care has already been given, use the form below.</EmptyState>
             )}
             <details className="mt-6 rounded-control border border-line bg-surface">
               <summary className="flex min-h-11 cursor-pointer items-center px-4 py-2 font-semibold text-primary">Record care already given (exception)</summary>
               <div className="border-t border-line p-4 sm:p-5">
-                <ExceptionForm clinicId={clinicId} clinicTimezone={tz} childId={c.childId} encounterId={encounter?.encounterId ?? null} products={productList} lots={stockLots} locations={stockLocations} />
+                <ExceptionForm clinicId={clinicId} clinicTimezone={tz} initialClinicTime={initialClinicTime} childId={c.childId} encounterId={encounter?.encounterId ?? null} products={productList} lots={stockLots} locations={stockLocations} />
               </div>
             </details>
           </Section>
@@ -165,53 +228,9 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
 
         {canSeeVisits ? (
           <Section id="vis-h" title="Visits" description="Book, move or cancel a visit for a family who phones in or comes to the desk. The family is told each change in the app.">
-            <StaffVisits childId={c.childId} childName={c.displayName} appointments={visits} sessions={sessions} clinicTimezone={tz} canManage={caps.has("appointment.manage")} recordActive={c.recordStatus === "active" || c.recordStatus === "provisional"} />
+            <StaffVisits childId={c.childId} childName={personName(c.displayName)} appointments={visits} sessions={sessions} clinicTimezone={tz} canManage={caps.has("appointment.manage")} recordActive={c.recordStatus === "active" || c.recordStatus === "provisional"} />
           </Section>
         ) : null}
-
-        <Section id="notes-h" title="Staff notes" description="Observations and follow-up information recorded by authorized clinic staff. These notes do not replace a clinical assessment.">
-          <StaffNotes clinicId={clinicId} childId={c.childId} notes={notes} capabilities={[...caps]} clinicTimezone={tz} events={history ?? []} />
-        </Section>
-
-        <div className="grid gap-10 xl:grid-cols-2">
-          <Section id="g-h" title="Guardians" className={canClinical ? "" : "border-t-0 pt-0"}>
-            {/* Removed guardians leave this list, so their confirmation is shown here rather than in their row. */}
-            <OutcomeNoticeView noticeKey={`guardians:${childId}`} />
-            {c.guardians.length === 0 ? (
-              <p className="text-ink-soft">No guardian is recorded.</p>
-            ) : (
-              <ul className="divide-y divide-line rounded-control border border-line bg-surface">
-                {c.guardians.map((g) => (
-                  <li key={g.relationshipId} className="p-4">
-                    <p className="font-bold">
-                      {g.name} <span className="font-normal text-ink-soft">({g.relationship.replace("_", " ")})</span>
-                    </p>
-                    <div className="my-1.5 flex flex-wrap items-center gap-2">
-                      {relationshipChip(g.status)}
-                      {g.hasAccount ? null : <span className="text-sm text-ink-soft">No app account</span>}
-                    </div>
-                    {g.phone || g.email ? <p className="tnum text-sm">{[g.phone, g.email].filter(Boolean).join(" · ")}</p> : null}
-                    {contactOf.get(g.relationshipId) ? <VerifyContact clinicId={clinicId} contact={contactOf.get(g.relationshipId)!} /> : null}
-                    {caps.has("guardian.verify") ? <GuardianActions clinicId={clinicId} childId={childId} guardianName={g.name} relationshipId={g.relationshipId} status={g.status} /> : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Section>
-
-          <Section id="a-h" title="Record actions">
-            {caps.has("child.register") ? (
-              <div className="space-y-5">
-                {/* Always mounted, so its "Identity confirmed" outcome survives the refresh that removes the button. */}
-                <ConfirmIdentity clinicId={clinicId} childId={c.childId} version={c.version} provisional={c.recordStatus === "provisional"} />
-                <StaffQr clinicId={clinicId} childId={c.childId} childName={c.displayName} />
-                {caps.has("review.resolve") ? <RecordStatus clinicId={clinicId} childId={c.childId} childName={c.displayName} recordStatus={c.recordStatus} /> : null}
-              </div>
-            ) : (
-              <p className="text-ink-soft">Your role can view identity details only.</p>
-            )}
-          </Section>
-        </div>
 
         {canClinical ? (
           <>
@@ -270,11 +289,7 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
               </Section>
             ) : null}
           </>
-        ) : (
-          <Section id="n-h" title="Vaccination history and schedule">
-            <p className="text-ink-soft">Your role does not include clinical history.</p>
-          </Section>
-        )}
+        ) : null}
 
         {canVerifyGuardians && transferTargets.length > 0 && c.recordStatus === "active" ? (
           <Section id="mv-h" title="Move this child's record" description="For a family that is moving to another clinic of this organization.">
@@ -282,9 +297,18 @@ export default async function ChildPage({ params }: { params: Promise<{ clinicId
           </Section>
         ) : null}
 
+        <Section id="notes-h" title="Staff notes" description="Observations and follow-up information recorded by authorized clinic staff. These notes do not replace a clinical assessment.">
+          <StaffNotes clinicId={clinicId} childId={c.childId} notes={notes} capabilities={[...caps]} clinicTimezone={tz} events={history ?? []} />
+        </Section>
+
         {caps.has("child.register") ? (
           <Section id="e-h" title="Correct identity details" description="Changes to name or birth date need a reason and are kept in the audit trail.">
-            <EditIdentity clinicId={clinicId} childId={c.childId} version={c.version} initial={{ displayName: c.displayName, dob: c.dob ?? "", addressText: c.addressText ?? "", precision: c.dobPrecision }} />
+            <details className="group rounded-control border border-line bg-surface">
+              <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 font-semibold text-primary"><span>Edit identity details</span><ChevronDown aria-hidden className="size-4 shrink-0 group-open:rotate-180" /></summary>
+              <div className="border-t border-line p-4 sm:p-5">
+                <EditIdentity clinicId={clinicId} childId={c.childId} version={c.version} initial={{ displayName: c.displayName, dob: c.dob ?? "", addressText: c.addressText ?? "", precision: c.dobPrecision }} />
+              </div>
+            </details>
           </Section>
         ) : null}
       </div>

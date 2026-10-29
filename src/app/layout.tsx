@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Building2, HelpCircle, MessageSquare, UserRound, Users, type LucideIcon } from "lucide-react";
+import { Building2, CalendarDays, ClipboardList, HelpCircle, MessageSquare, Settings, Users, type LucideIcon } from "lucide-react";
 import { ConfigError, getViewer, type Viewer } from "@/lib/server/viewer";
 import { AppError } from "@/lib/api/errors";
 import "./globals.css";
@@ -12,7 +12,6 @@ import { WorkspaceNavLink } from "@/components/workspace-nav-link";
 import { ProfileMenu } from "@/components/profile-menu";
 import { HeaderHeight } from "@/components/header-height";
 import { AppToaster } from "@/components/toaster";
-import { SignOutButton } from "@/components/sign-out-button";
 import { StaffIdleSignOut } from "@/components/staff-idle-sign-out";
 import { ScrollShadow } from "@/components/scroll-shadow";
 import { clinicLandingRoute } from "@/lib/auth/destination";
@@ -98,7 +97,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     ? [
       ...(firstClinic
         ? [{ href: staff.length === 1 ? firstClinicRoute : "/clinic", label: staff.length === 1 && staff[0]?.roles.every(role => role === "tech_admin") ? "Admin console" : "Clinic workspace", Icon: Building2, accent: true }]
-        : [{ href: "/children", label: "My Children", Icon: Users }, { href: "/help", label: "Care Info", Icon: HelpCircle }]),
+        : [
+          { href: "/children", label: "My Children", Icon: Users },
+          { href: "/vaccination-records", label: "Vaccination records", Icon: ClipboardList },
+          { href: "/appointments", label: "Appointments", Icon: CalendarDays },
+          { href: "/help", label: "Care Info", Icon: HelpCircle },
+        ]),
       {
         href: "/messages",
         label: "Messages",
@@ -106,7 +110,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         ariaLabel: !unread ? "Messages, unread count unavailable" : unread.unread > 0 ? `Messages, ${unread.unread} unread` : undefined,
         badge: unreadBadge,
       },
-      { href: "/account", label: "Account", Icon: UserRound },
+      { href: "/account", label: "Settings / Account", Icon: Settings },
     ]
     : [];
 
@@ -122,25 +126,24 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
 
           <header data-site-header="" className="sticky top-0 z-40 border-b border-line glass-header">
-            <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">
+            <div className={`mx-auto flex w-full flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6 ${viewer?.session ? "max-w-none" : "max-w-7xl"}`}>
               <Link href="/" aria-label="eVacTrack home" className="site-brand inline-flex min-h-11 shrink-0 items-center text-[1.875rem] no-underline sm:text-[2.125rem]">
                 <BrandLogo />
               </Link>
 
               {viewer?.session ? (
-                <ProfileMenu name={viewer.ctx?.displayName || viewer.session.email || "Your account"} initial={userInitial} />
+                <ProfileMenu memberships={viewer.ctx?.memberships ?? []} name={viewer.ctx?.displayName || viewer.session.email || "Your account"} initial={userInitial} />
               ) : <PublicNav />}
             </div>
           </header>
 
-          <div data-workspace-frame className={`mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8${viewer?.session ? " lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8" : ""}`}>
-          {viewer?.session ? <WorkspaceSidebar clinics={staff.map(({ clinicId, clinicName, roles, capabilities }) => ({ clinicId, clinicName, roles, capabilities }))} unread={unread ? unread.unread : null}>
+          <div data-workspace-frame className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-8${viewer?.session ? " lg:grid lg:max-w-none lg:grid-cols-[17rem_minmax(0,1fr)] lg:px-0 lg:py-0" : " max-w-7xl"}`}>
+          {viewer?.session ? <WorkspaceSidebar memberships={viewer.ctx?.memberships ?? []} clinics={staff.map(({ clinicId, clinicName, roles, capabilities }) => ({ clinicId, clinicName, roles, capabilities }))} unread={unread ? unread.unread : null}>
             <ul className="grid gap-1">
-              {links.filter(link => !firstClinic || !link.accent).map(link => <li key={link.href}><HeaderNavLink link={link} /></li>)}
+              {links.filter(link => !firstClinic || (!link.accent && link.href !== "/account")).map(link => <li key={link.href}><HeaderNavLink link={link} /></li>)}
             </ul>
-            <div className="mt-5 border-t border-line pt-4"><SignOutButton inline /></div>
           </WorkspaceSidebar> : null}
-          <main id="main" tabIndex={-1} className="relative z-10 min-w-0">
+          <main id="main" tabIndex={-1} className={`relative z-10 min-w-0${viewer?.session ? " w-full lg:mx-auto lg:max-w-7xl lg:px-8 lg:py-8 xl:px-10" : ""}`}>
             {configError ? (
               <div role="alert" className="rounded-card border border-danger bg-danger-bg p-6 text-danger">
                 <p className="text-lg font-bold">The service is temporarily unavailable.</p>

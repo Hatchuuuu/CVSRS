@@ -31,8 +31,15 @@ describe("callApi outcome classification", () => {
 
   it("marks a network failure as unknown", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("offline"); }));
-    const res = await callApi("/api/v1/x");
+    const res = await callApi("/api/v1/x", { method: "POST", body: {} });
     expect(res).toMatchObject({ ok: false, status: 0, code: "network", unknown: true });
+  });
+
+  it.each([undefined, "GET", "HEAD"])("offers read recovery without claiming an unconfirmed save for %s", async (method) => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("offline"); }));
+    const res = await callApi("/api/v1/clinics", { method });
+    expect(res).toMatchObject({ ok: false, status: 0, code: "network", message: "We could not load this information. Check your connection and try again." });
+    expect("unknown" in res && res.unknown).toBeFalsy();
   });
 
   it.each([500, 502, 504, 200])("does not claim an uncertain mutation saved nothing after HTTP %s", async (status) => {

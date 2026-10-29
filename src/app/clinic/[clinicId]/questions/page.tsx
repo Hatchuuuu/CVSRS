@@ -1,3 +1,4 @@
+import { personName } from "@/lib/person-name";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -61,7 +62,7 @@ export default async function Questions({ params }: { params: Promise<{ clinicId
                 <li key={r.planId} className="flex flex-wrap items-center justify-between gap-2 p-4">
                   <span>
                     <span className="block font-bold">
-                      {r.childName} <span className="tnum font-normal text-ink-soft">· {r.recordNo}</span>
+                      {personName(r.childName)} <span className="tnum font-normal text-ink-soft">· {r.recordNo}</span>
                     </span>
                     <span className="text-sm text-ink-soft">
                       {r.itemCount} item{r.itemCount === 1 ? "" : "s"} · written by {r.authoredBy ?? "staff"} · {when(r.submittedAt)}
@@ -93,7 +94,7 @@ export default async function Questions({ params }: { params: Promise<{ clinicId
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-bold">
                       <Link href={`/clinic/${clinicId}/children/${k.childId}`} className="text-primary">
-                        {k.childName}
+                        {personName(k.childName)}
                       </Link>{" "}
                       <span className="tnum font-normal text-ink-soft">· {k.recordNo}</span>
                     </p>

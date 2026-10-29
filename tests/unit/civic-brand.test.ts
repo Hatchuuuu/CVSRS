@@ -15,8 +15,8 @@ describe("shared civic brand", () => {
   });
 
   it("keeps compact controls and record surfaces across routes", () => {
-    expect(theme).toContain("--radius-card: 0.5rem");
-    expect(theme).toContain("--radius-control: 0.375rem");
+    expect(theme).toContain("--radius-card: 0.875rem");
+    expect(theme).toContain("--radius-control: 0.5rem");
     expect(css).not.toMatch(/letter-spacing:\s*-/);
     expect(css).not.toMatch(/\.card-elevated:hover/);
   });

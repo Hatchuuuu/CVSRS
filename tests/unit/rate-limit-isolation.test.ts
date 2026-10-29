@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({ rpcCalls: 0, getRpcClient: vi.fn(), credential
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: () => undefined }) }));
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({
+    rpc: async () => ({ data: "family", error: null }),
     auth: {
       signInWithPassword: async () => (state.credentialsValid
         ? { data: { user: { id: "11111111-1111-4111-8111-111111111111" } }, error: null }

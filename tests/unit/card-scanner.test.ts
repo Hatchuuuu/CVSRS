@@ -6,6 +6,7 @@ import { CardScanner } from "@/app/children/[childId]/card-scanner";
 describe("vaccination card scanner", () => {
   it("offers camera/upload with a manual fallback and local-processing disclosure", () => {
     const html = renderToStaticMarkup(React.createElement(CardScanner, { onRows: () => undefined }));
+    expect((html.match(/disabled=""/g) ?? [])).toHaveLength(2);
     expect(html).toContain('accept="image/*"');
     expect(html).toContain('capture="environment"');
     expect(html).toContain("processed only in this browser");

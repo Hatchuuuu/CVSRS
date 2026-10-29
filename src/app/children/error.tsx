@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
-import { Button, Notice } from "@/components/ui";
+import { Button, Notice, PageTitle } from "@/components/ui";
 
 /** Guardian area: no technical detail or record data; a way back to the family's list; the digest for the clinic. */
 export default function ChildrenError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (
     <div>
+      <PageTitle title="This page could not be loaded" />
       <Notice tone="danger" role="alert" title="This page could not load">
         If you were sending something to the clinic, check before sending it again. Try again, or tell the clinic this reference if the problem continues:{" "}
         <span className="tnum font-semibold">{error.digest ?? "not available"}</span>

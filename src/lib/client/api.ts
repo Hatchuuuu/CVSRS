@@ -45,6 +45,7 @@ export function withFieldDetails(message: string, fieldErrors?: Record<string, s
 export async function callApi<T>(path: string, init: { method?: string; body?: unknown; key?: string; timeoutMs?: number } = {}): Promise<ApiSuccess<T> | ApiFailure> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), init.timeoutMs ?? 15_000);
+  const mutating = !["GET", "HEAD"].includes((init.method ?? "GET").toUpperCase());
   try {
     const res = await fetch(path, {
       method: init.method ?? "GET",
@@ -57,7 +58,6 @@ export async function callApi<T>(path: string, init: { method?: string; body?: u
     if (res.ok && json.data !== undefined) return { ok: true, data: json.data, requestId: json.requestId ?? "" };
     const code = json.error?.code ?? "internal";
     const base = asSentence(json.error?.message ?? "Something went wrong.");
-    const mutating = !["GET", "HEAD"].includes((init.method ?? "GET").toUpperCase());
     const uncertain = code === "already_saved" || (mutating && (res.status >= 500 || res.ok));
     return {
       ok: false,
@@ -71,7 +71,9 @@ export async function callApi<T>(path: string, init: { method?: string; body?: u
       ...(json.error?.reason && KNOWN_REASONS.has(json.error.reason) ? { reason: json.error.reason as ApiFailureReason } : {}),
     };
   } catch {
-    return { ok: false, status: 0, code: "network", message: "We could not confirm whether this was saved. Check the connection and try again — repeating it is safe.", unknown: true };
+    return mutating
+      ? { ok: false, status: 0, code: "network", message: "We could not confirm whether this was saved. Check the connection and try again — repeating it is safe.", unknown: true }
+      : { ok: false, status: 0, code: "network", message: "We could not load this information. Check your connection and try again." };
   } finally {
     clearTimeout(timer);
   }

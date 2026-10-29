@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { personName } from "@/lib/person-name";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
 
     const email = fields.email?.trim() ?? "";
     const password = fields.password ?? "";
-    const fullName = fields.fullName?.trim() ?? "";
+    const fullName = personName(fields.fullName ?? "");
     const phone = fields.phone?.trim() ?? "";
 
     if (!z.email().safeParse(email).success || phone.length > 40) {

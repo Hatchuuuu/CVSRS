@@ -132,6 +132,7 @@ test("the family asks for a name correction and reports an outside dose; staff r
   // Apply the checked change on the record, then close the request.
   await n.goto(`/clinic/${clinicId}/children/${childId}`);
   const identity = n.getByRole("region", { name: "Correct identity details" });
+  await identity.locator("summary", { hasText: "Edit identity details" }).click();
   await identity.getByLabel("Full name").fill(newName);
   await identity.getByLabel("Reason for the change").fill("E2E: guardian request checked against the birth certificate");
   await identity.getByRole("button", { name: "Save corrections" }).click();
@@ -146,6 +147,7 @@ test("the family asks for a name correction and reports an outside dose; staff r
   await map.selectOption((await map.locator("option", { hasText: PRODUCT_GAMMA }).getAttribute("value"))!);
   await expect(reported.getByLabel("Confirmed exact date")).toHaveValue(clinicDate(-3));
   await reported.getByRole("button", { name: "Confirm dose" }).click();
+  await expect(n.getByRole("status").filter({ hasText: "Reported dose confirmed" })).toBeVisible();
   await expect(n.getByRole("region", { name: "Vaccination history" }).getByRole("listitem").filter({ hasText: PRODUCT_GAMMA })).toContainText("Verified");
   await n.reload();
   await expect(n.getByRole("region", { name: "Vaccination history" }).getByRole("listitem").filter({ hasText: PRODUCT_GAMMA })).toContainText("Verified");
@@ -181,14 +183,16 @@ test("a second family asks to be linked to the first family's child; staff decli
   const { clinicId, childId, childName } = readVisitState();
   const p2 = await signInFamily(browser, "parent2", PASSWORD);
   const p = p2.page;
-  // This family has not accepted the clinic's privacy notice yet (05 left it pending).
-  const notice = p.getByRole("button", { name: "I have read this and I accept" });
-  if (await notice.count()) {
+  await p.getByRole("link", { name: "Link a clinic record", exact: true }).first().click();
+  const link = p.getByRole("region", { name: "Link an existing clinic record" });
+  await link.getByLabel("Clinic", { exact: true }).selectOption({ label: "E2E Health Center" });
+  // Wait for the selected clinic's asynchronous privacy check before deciding whether acceptance is needed.
+  await expect(link.getByText("Checking the clinic's privacy notice...", { exact: true })).toHaveCount(0);
+  const notice = link.getByRole("button", { name: "I have read this and I accept" });
+  if (await notice.isVisible()) {
     await notice.click();
     await expect(notice).toHaveCount(0);
   }
-  const link = p.getByRole("region", { name: "Link an existing clinic record" });
-  await link.getByLabel("Clinic", { exact: true }).selectOption({ label: "E2E Health Center" });
   await link.getByLabel("Child's name as the clinic knows it").fill(childName!);
   await link.getByLabel("Child's date of birth (if known)").fill(clinicDate(-15));
   await link.getByLabel("Your relationship to the child").selectOption("father");

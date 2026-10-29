@@ -31,7 +31,7 @@ export default async function OutageForms({ params }: { params: Promise<{ clinic
           PROVISIONAL — not yet entered in the system. Date: ________________ Vaccinator: ______________________ Station: ________
         </p>
         <div tabIndex={0} role="region" aria-label="Vaccination paper log preview" className="overflow-x-auto focus-inset print:overflow-visible">
-        <table className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
+        <table data-paper-form className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
           <thead>
             <tr>
               {["No.", "Child's full name", "Birth date", "Record no. (if known)", "Guardian", "Vaccine", "Lot no.", "Time given", "Site", "Given by (signature)"].map((h) => (
@@ -62,7 +62,7 @@ export default async function OutageForms({ params }: { params: Promise<{ clinic
         </h2>
         <p className="mb-3 text-sm">PROVISIONAL — not yet entered in the system. Date: ________________ Recorded by: ______________________</p>
         <div tabIndex={0} role="region" aria-label="Vaccine stock paper log preview" className="overflow-x-auto focus-inset print:overflow-visible">
-        <table className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
+        <table data-paper-form className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
           <thead>
             <tr>
               {["Vaccine", "Lot no.", "Expiry", "Received", "Used", "Wasted (reason)", "Counted on shelf", "Fridge temp. (min / max)", "Initials"].map((h) => (
@@ -91,7 +91,7 @@ export default async function OutageForms({ params }: { params: Promise<{ clinic
         </h2>
         <p className="mb-3 text-sm">Use when the queue screen is unavailable. Write tickets in order of arrival. Date: ________________</p>
         <div tabIndex={0} role="region" aria-label="Arrival sheet preview" className="overflow-x-auto focus-inset print:overflow-visible">
-        <table className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
+        <table data-paper-form className="w-full min-w-[48rem] border-collapse text-sm print:min-w-0">
           <thead>
             <tr>
               {["Ticket", "Arrived", "Child's full name", "Appointment? (Y/N)", "Priority reason (if any)", "Called at", "Outcome"].map((h) => (

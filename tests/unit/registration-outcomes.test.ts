@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh() {} }) }));
 vi.mock("@/lib/client/api", () => ({ useMutation: () => ({ state: hooks.state, run: hooks.run, reset() {} }) }));
 
 import { RegisterChildForm } from "@/app/clinic/[clinicId]/workspace";
-import { AdministerPanel } from "@/app/clinic/[clinicId]/children/[childId]/administration";
+import { AdministerPanel, ExceptionForm } from "@/app/clinic/[clinicId]/children/[childId]/administration";
 
 type Element = ReactElement<Record<string, unknown>>;
 function nodes(value: unknown): Element[] {
@@ -79,10 +79,38 @@ describe("registration outcomes", () => {
 
   it("keeps signed-care confirmation after the last usable dose is consumed", () => {
     hooks.state = { phase: "success", data: { creditedRequirements: [], scheduleEvaluated: false, administeredOn: "2026-10-07" } };
-    const html = renderToStaticMarkup(createElement(AdministerPanel, { clinicId: "clinic", clinicTimezone: "Asia/Manila", encounterId: "visit", childName: "Ana", recordNo: "R", lots: [], locations: [] }));
+    const html = renderToStaticMarkup(createElement(AdministerPanel, { clinicId: "clinic", clinicTimezone: "Asia/Manila", initialClinicTime: "2026-10-07T08:00", encounterId: "visit", childName: "Ana", recordNo: "R", lots: [], locations: [] }));
     expect(html).toContain('role="status"');
     expect(html).toContain("Vaccination recorded and signed");
     expect(html).toContain("Saved for <strong>Ana</strong>");
     expect(html).not.toContain("No usable stock");
+  });
+});
+
+
+afterEach(() => vi.useRealTimers());
+
+describe("administration clock interactions", () => {
+  const lot = { lotId: "lot", lot: "L", product: "Demo", productCode: "D", expiresOn: "2027-01-01", disposition: "usable", expired: false, usable: "1", locations: [{ locationId: "fridge", onHand: "1" }] };
+  const props = { clinicId: "clinic", clinicTimezone: "Asia/Manila", initialClinicTime: "2026-10-18T06:25", childId: "child", encounterId: "visit", childName: "Ana", recordNo: "R", products: [], lots: [lot], locations: [{ id: "fridge", name: "Fridge", kind: "usable", status: "active" }] };
+
+  it.each([AdministerPanel, ExceptionForm])("refreshes the future limit on focus/edit without replacing the actual time", component => {
+    vi.useFakeTimers({ now: new Date("2026-10-17T22:27:00Z"), toFake: ["Date"] });
+    const input = () => render(() => component(props)).find(el => el.props.type === "datetime-local")!;
+    (input().props.onFocus as () => void)();
+    expect(input().props).toMatchObject({ value: "2026-10-18T06:25", max: "2026-10-18T06:27" });
+    vi.setSystemTime(new Date("2026-10-17T22:28:00Z"));
+    (input().props.onChange as (event: unknown) => void)({ target: { value: "2026-10-18T06:24" } });
+    expect(input().props).toMatchObject({ value: "2026-10-18T06:24", max: "2026-10-18T06:28" });
+  });
+
+  it("starts another administration with the same fresh clinic time as its future limit", () => {
+    vi.useFakeTimers({ now: new Date("2026-10-17T22:29:00Z"), toFake: ["Date"] });
+    hooks.state = { phase: "success", data: { creditedRequirements: [], scheduleEvaluated: false } };
+    const button = render(() => AdministerPanel(props)).find(el => typeof el.props.onClick === "function")!;
+    (button.props.onClick as () => void)();
+    hooks.state = { phase: "idle" };
+    const input = render(() => AdministerPanel(props)).find(el => el.props.type === "datetime-local")!;
+    expect(input.props).toMatchObject({ value: "2026-10-18T06:29", max: "2026-10-18T06:29" });
   });
 });

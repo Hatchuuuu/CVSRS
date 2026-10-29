@@ -1,11 +1,12 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { CookieOptions } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
 import { z } from "zod";
 import { getConfig } from "@/lib/env";
 import { isSameOrigin } from "@/lib/security/origin";
 import { serverSessionCookiePolicy, sessionCookieMethods } from "@/lib/auth/cookies";
-import { entryDestination } from "@/lib/auth/redirect";
+import { entryDestination, STAFF_HOME } from "@/lib/auth/redirect";
 import { authAttemptSucceeded, authException, authFailure, authRateLimit, authRedirect, authServiceFailure, isJsonAuthRequest, readAuthFields } from "@/lib/auth/request";
 
 export async function POST(req: Request) {
@@ -23,7 +24,13 @@ export async function POST(req: Request) {
       return authFailure(req, "sign-in", "Enter your email address and password.", 400, "invalid_input");
     }
     const jar = await cookies();
-    const supabase = createServerClient(cfg.supabaseUrl, cfg.supabaseKey, { cookies: sessionCookieMethods(jar, serverSessionCookiePolicy(process.env)) });
+    // Keep new session cookies private until the account is admitted through the correct portal.
+    const stored = new Map(jar.getAll().map(cookie => [cookie.name, cookie.value]));
+    const staged = new Map<string, { value: string; options?: CookieOptions }>();
+    const supabase = createServerClient(cfg.supabaseUrl, cfg.supabaseKey, { cookies: sessionCookieMethods({
+      getAll: () => [...stored].map(([name, value]) => ({ name, value })),
+      set: (name, value, options) => { stored.set(name, value); staged.set(name, { value, options }); },
+    }, serverSessionCookiePolicy(process.env)) });
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
       const service = authServiceFailure(req, "sign-in", error);
@@ -33,6 +40,18 @@ export async function POST(req: Request) {
       }
       return authFailure(req, "sign-in", "Invalid credentials. Please verify your email and password.", 401, "invalid_credentials");
     }
+    const { data: kind, error: kindError } = await supabase.rpc("get_sign_in_account_kind");
+    if (kindError || (kind !== "staff" && kind !== "family")) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      return authFailure(req, "sign-in", "Account access could not be checked. Please try again.", 503, "unavailable");
+    }
+    if ((kind === "staff") !== (redirectUrl === STAFF_HOME)) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      return authFailure(req, "sign-in", kind === "staff"
+        ? "This is a staff account. Please use the clinic staff sign-in page."
+        : "This is a family account. Please use the family sign-in page.", 403, kind === "staff" ? "staff_portal_required" : "family_portal_required");
+    }
+    for (const [name, cookie] of staged) jar.set(name, cookie.value, cookie.options);
     await authAttemptSucceeded(req, "sign-in", email);
     if (isJsonAuthRequest(req)) return NextResponse.json({ ok: true, redirect: redirectUrl }, { headers: { "cache-control": "no-store" } });
     return authRedirect(redirectUrl);

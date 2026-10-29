@@ -24,14 +24,25 @@ async function tabTo(page: Page, target: Locator) {
 
 async function scanOpened(page: Page, state: string) {
   await page.addScriptTag({ content: AXE });
-  const result = await page.evaluate(async () => {
-    const axe = (window as unknown as { axe: { run: (context: Document, options: object) => Promise<{ violations: { id: string; impact: string; nodes: { target: string[] }[] }[] }> } }).axe;
-    const { violations } = await axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] } });
-    return {
-      violations: violations.map((violation) => `${violation.impact} ${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`),
-      overflow: document.documentElement.scrollWidth > innerWidth + 1,
-    };
-  });
+  const position = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
+  const focus = await page.evaluateHandle(() => document.activeElement);
+  // Scan a canonical document viewport; focus scrolling can clip a 44px link behind the sticky header.
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  let result;
+  try {
+    result = await page.evaluate(async () => {
+      const axe = (window as unknown as { axe: { run: (context: Document, options: object) => Promise<{ violations: { id: string; impact: string; nodes: { target: string[] }[] }[] }> } }).axe;
+      const { violations } = await axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] } });
+      return {
+        violations: violations.map((violation) => `${violation.impact} ${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`),
+        overflow: document.documentElement.scrollWidth > innerWidth + 1,
+      };
+    });
+  } finally {
+    await page.evaluate(({ x, y }) => window.scrollTo({ left: x, top: y, behavior: "instant" }), position);
+  }
+  expect(await focus.evaluate(element => element === document.activeElement), "the scan preserves keyboard focus").toBe(true);
+  await focus.dispose();
   expect(result, `${state}: ${JSON.stringify(result)}`).toEqual({ violations: [], overflow: false });
 }
 
@@ -55,7 +66,15 @@ test("family and clinical lead can use nested menus and opened forms by keyboard
     await tabTo(f, menu);
     await f.keyboard.press("Enter");
     await expect(menu).toHaveAttribute("aria-expanded", "true");
-    const signOut = f.getByRole("navigation", { name: "Main navigation", exact: true }).getByRole("button", { name: "Sign out", exact: true });
+    const settings = f.getByRole("navigation", { name: "Main navigation", exact: true }).getByRole("link", { name: "Settings / Account", exact: true });
+    await tabTo(f, settings);
+    await expect(settings).toBeFocused();
+    await f.keyboard.press("Escape");
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    const profile = f.getByRole("button", { name: /^Account menu for/ });
+    await tabTo(f, profile);
+    await f.keyboard.press("Enter");
+    const signOut = f.getByRole("group", { name: "Account options" }).getByRole("button", { name: "Sign out", exact: true });
     await tabTo(f, signOut);
     await expect(signOut).toBeFocused();
     await f.keyboard.press("Enter");
@@ -69,11 +88,11 @@ test("family and clinical lead can use nested menus and opened forms by keyboard
     await f.keyboard.press("Escape");
     await expect(signOutDialog).not.toBeVisible();
     await expect(signOut).toBeFocused();
-    await expect(menu).toHaveAttribute("aria-expanded", "true");
     await f.keyboard.press("Escape");
-    await expect(menu).toHaveAttribute("aria-expanded", "false");
-    await expect(menu).toBeFocused();
+    await expect(profile).toHaveAttribute("aria-expanded", "false");
+    await expect(profile).toBeFocused();
 
+    await f.getByRole("link", { name: "Register a child", exact: true }).first().click();
     const add = f.getByRole("region", { name: "Register a new child record" });
     await expect(add.getByText("Checking the clinic's privacy notice...")).toHaveCount(0, { timeout: 60_000 });
     await add.getByLabel("How well do you know the birth date?").selectOption("estimated");
@@ -112,6 +131,7 @@ test("family and clinical lead can use nested menus and opened forms by keyboard
     const inactiveGroup = l.getByRole("group", { name: "Confirm marking the record inactive" });
     await expect(inactiveGroup.getByRole("button", { name: "Keep it active" })).toBeFocused();
     await scanOpened(l, "inactive-record safe confirmation");
+    await expect(inactiveGroup.getByRole("button", { name: "Keep it active" })).toBeFocused();
     await l.keyboard.press("Enter");
     await expect(inactiveGroup).toHaveCount(0);
     await expect(inactiveTrigger).toBeFocused();
@@ -147,7 +167,7 @@ test("family and clinical lead can use nested menus and opened forms by keyboard
       records.push({ childId: String(result.body.data!.childId), localRecordNo: String(result.body.data!.localRecordNo) });
     }
     await l.goto(`/clinic/${clinicId}/review`);
-    const duplicate = l.getByRole("region", { name: new RegExp(`${escapeRe(name)} \\(${escapeRe(records[1]!.localRecordNo)}\\)`) }).filter({ hasText: records[0]!.localRecordNo });
+    const duplicate = l.getByRole("region", { name: new RegExp(`${escapeRe(name)} \\(${escapeRe(records[1]!.localRecordNo)}\\)`, "i") }).filter({ hasText: records[0]!.localRecordNo });
     await expect(duplicate).toHaveCount(1);
     for (const record of records) {
       const keep = duplicate.getByRole("button", { name: `Same child — keep ${record.localRecordNo}`, exact: true });

@@ -57,10 +57,18 @@ export default async function Inventory({ params }: { params: Promise<{ clinicId
 
   return (
     <>
-      <PageTitle
+      <PageTitle dashboard
         title="Vaccine stock"
         lead={`As of ${formatDate(stock.asOf)}. "On hand" is what is physically there; "usable" leaves out quarantined, recalled and expired lots. Every change is a permanent ledger entry with a reason.`}
       />
+      <dl aria-label="Stock overview" className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 border-b border-line pb-6 xl:grid-cols-4">
+        {[
+          ["Registered lots", stock.lots.length],
+          ["Expired lots", stock.lots.filter(l => l.expired).length],
+          ["Quarantined or recalled", stock.lots.filter(l => l.disposition !== "usable").length],
+          ["Active usable locations", usableLocs.length],
+        ].map(([label, value]) => <div key={label}><dt className="text-sm text-ink-soft">{label}</dt><dd className="mt-1 text-2xl font-bold tabular-nums">{value}</dd></div>)}
+      </dl>
       <StockNav clinicId={clinicId} current="lots" canManage={canManage || canApprove} />
       <OutcomeNoticeView noticeKey={`inventory:${clinicId}`} />
       <Card className="mb-6" aria-labelledby="st-h">
@@ -70,9 +78,9 @@ export default async function Inventory({ params }: { params: Promise<{ clinicId
         {stock.lots.length === 0 ? (
           <EmptyState title="No lots registered yet">{canManage ? "Register a lot, then receive stock into a location." : "Lots are registered by someone with the Inventory clerk role. If nobody has it yet, an access administrator grants it under Staff access (a second person approves)."}</EmptyState>
         ) : (
-          <ul className="divide-y divide-line rounded-control border border-line">
+          <ul className="-mx-5 divide-y divide-line sm:-mx-6">
             {stock.lots.map((l) => (
-              <li key={l.lotId} className="p-4">
+              <li key={l.lotId} className="px-5 py-4 sm:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-bold">
                     {l.product} <span className="font-normal text-ink-soft">· lot {l.lot}</span>

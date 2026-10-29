@@ -12,7 +12,7 @@ test("a family signs up and immediately lands in the signed-in family portal wit
   const email = account("parent");
   await signUpFamily(page, "Maria Santos", email);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Account" }).first()).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Workspace sidebar" }).getByRole("link", { name: "Settings / Account", exact: true })).toBeVisible();
 
   // Retrying signup must not create another account, send confirmation mail, or destroy the active session.
   const retryAt = new Date();

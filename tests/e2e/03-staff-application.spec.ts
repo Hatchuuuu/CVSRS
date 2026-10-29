@@ -7,6 +7,18 @@ import { PASSWORD, account, asDatabaseOwner, assertAutoConfirmed, enrolTotp, rea
 
 const NURSE = "Nora Nurse";
 
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus) return;
+  const probes: { path: string; status: number | null; elapsedMs: number }[] = [];
+  for (const path of ["/api/v1/health/ready", "/clinic"]) {
+    const began = Date.now();
+    let status: number | null = null;
+    try { status = (await page.request.get(path, { maxRedirects: 0, timeout: 5000 })).status(); } catch { /* Preserve only timing/status, never credentials or response bodies. */ }
+    probes.push({ path, status, elapsedMs: Date.now() - began });
+  }
+  await info.attach("navigation-server-probe", { body: JSON.stringify(probes), contentType: "application/json" });
+});
+
 test("a nurse applies to the health center while creating a staff account", async ({ page }) => {
   const since = new Date();
   await page.goto("/evactrackstafflogin/create-account");
@@ -33,7 +45,8 @@ test("the administrator accepts; they cannot also approve; the clinical lead app
   const admin = await adminCtx.newPage();
   await signIn(admin, account("admin"), undefined, true);
   await verifyTotp(admin, totp!.admin!);
-  await admin.goto(`/clinic/${clinicId}/admin`);
+  await admin.goto(`/developer/${clinicId}/staff`);
+  await expect(admin.getByRole("button", { name: /^Account menu for/ })).toBeEnabled();
   await admin.getByRole("button", { name: `Accept application from ${NURSE}` }).click();
   await admin.getByRole("button", { name: "Accept and send for approval" }).click();
   // The outcome persists on the page: the application leaves the queue and waits for someone else to approve it.

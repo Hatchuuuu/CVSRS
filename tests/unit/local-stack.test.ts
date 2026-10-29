@@ -1,7 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { assertImmediateSignup, assertLoopback, localCliOutput, localWebEnvironment, parseStatus } from "../../scripts/local-stack";
+import { createServer, type AddressInfo } from "node:net";
+import { assertImmediateSignup, assertLoopback, localCliOutput, localWebEnvironment, parseStatus, requireFreeLoopbackPort } from "../../scripts/local-stack";
 
 afterEach(() => vi.unstubAllGlobals());
+
+it.each(["127.0.0.1", "::1"])("refuses a port occupied on %s before starting another runtime", async host => {
+  const server = createServer();
+  await new Promise<void>(resolve => server.listen({ port: 0, host, exclusive: true }, resolve));
+  const port = (server.address() as AddressInfo).port;
+  try { await expect(requireFreeLoopbackPort(port)).rejects.toThrow(/already in use/); }
+  finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+  await expect(requireFreeLoopbackPort(port)).resolves.toBeUndefined();
+});
 
 it("omits CLI credential rows while preserving migration and service diagnostics", () => {
   const output = 'Applying migration 0049.sql\n{"SECRET_KEY":"private-test-value","DB_URL":"postgresql://owner:private-test-value@localhost/db"}\nSecret key: sb_secret_private\nJWT: eyJprivate.token.signature\nAPI URL: http://localhost:55321';

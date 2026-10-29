@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -186,14 +188,14 @@ export function WalkInPanel({ clinicId }: { clinicId: string }) {
           {hits.map((h) => (
             <li key={h.childId} className="flex flex-wrap items-center justify-between gap-2 p-3">
               <span className="min-w-0 break-words">
-                <span className="block font-bold">{h.displayName}</span>
+                <span className="block font-bold">{personName(h.displayName)}</span>
                 <span className="text-sm text-ink-soft">
                   {h.localRecordNo} · {formatDate(h.dob, { fallback: "DOB not recorded" })}
                 </span>
               </span>
               <Button
                 disabled={state.phase === "pending"}
-                aria-label={`Add ${h.displayName} to the queue`}
+                aria-label={`Add ${personName(h.displayName)} to the queue`}
                 onClick={async () => {
                   const r = await run({ childId: h.childId, overflowReason: overflow.trim() || undefined });
                   if (r?.ok) {
@@ -275,7 +277,7 @@ export function QueueBoard({ clinicId, entries, canOpenRecord = false }: { clini
             {done.map((e) => (
               <li key={e.queueEntryId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="min-w-0 break-words">
-                  <strong>{e.ticket}</strong> {e.childName}
+                  <strong>{e.ticket}</strong> {personName(e.childName)}
                 </span>
                 <StatusChip tone={LABEL[e.status]?.tone ?? "neutral"}>{LABEL[e.status]?.text ?? e.status}</StatusChip>
               </li>
@@ -312,10 +314,10 @@ function QueueRow({ clinicId, e, station, canOpenRecord }: { clinicId: string; e
           <span className="min-w-0">
             {canOpenRecord ? (
               <Link href={`/clinic/${clinicId}/children/${e.childId}`} className="flex min-h-11 items-center break-words text-lg font-bold leading-snug text-primary">
-                {e.childName}
+                {personName(e.childName)}
               </Link>
             ) : (
-              <span className="block break-words text-lg font-bold leading-snug">{e.childName}</span>
+              <span className="block break-words text-lg font-bold leading-snug">{personName(e.childName)}</span>
             )}
             <span className="tnum block text-sm text-ink-soft">
               {e.recordNo}

@@ -17,7 +17,7 @@
 --                version = the 4-digit file prefix and name = the rest of the file name; statements is left NULL.
 -- After running: run supabase/install/verify.sql (every row must be PASS or INFO).
 --
--- Migrations (61, 0000..0060); sha256 of the LF-normalised file:
+-- Migrations (63, 0000..0062); sha256 of the LF-normalised file:
 --   0000  49f8fd6f47c3bc54c02965df122cd3500d4853ff213d488192b295dee51ce2f1  0000_extensions.sql
 --   0001  d73114aead50dcdb8c137bf21bdc99fe5149258675a1e6806024bc8ebd82daf2  0001_foundation.sql
 --   0002  a562f185c108c894561409fbe411f4eb75d9563df060079a31a8bab2de711b8a  0002_staff_access.sql
@@ -79,6 +79,8 @@
 --   0058  032ad1744d2b955dbb43db8f3388c8470afa751916087176eaad5b36af3e493c  0058_staff_location.sql
 --   0059  c451545657d0fda0f8f81d69ca70092e91407279ea8372c5468cf926bc4ad756  0059_vaccination_care_summary.sql
 --   0060  c55fd53f8ee2cc4d40e96d1d6d9d406e30a75d8991a31f81b5bc232b88616394  0060_vaccination_care_corrections.sql
+--   0061  13492482b8c4bd436f7c475a71794e8395cf2c9706a236f445262c4f42b75de8  0061_sign_in_account_kind.sql
+--   0062  f16e816deaf334a47a68aa25faa7c74c1acb0416c117f079328470b3cbec7cae  0062_technical_console_reads.sql
 -- =====================================================================================================================
 
 begin;
@@ -12049,6 +12051,87 @@ create trigger vaccination_care_reattribution after insert on public.vaccination
 -- END 0060_vaccination_care_corrections.sql
 
 -- =====================================================================================================================
+-- BEGIN 0061_sign_in_account_kind.sql  sha256=13492482b8c4bd436f7c475a71794e8395cf2c9706a236f445262c4f42b75de8
+-- =====================================================================================================================
+-- Account entry is determined from governed staff records, never a browser persona selector.
+create function public.get_sign_in_account_kind() returns text
+language sql stable security definer set search_path='' as $$
+ select case when exists(select 1 from public.staff_memberships where profile_id=auth.uid())
+   or exists(select 1 from public.staff_applications where profile_id=auth.uid()) then 'staff' else 'family' end
+ where auth.uid() is not null;
+$$;
+revoke all on function public.get_sign_in_account_kind() from public,anon,authenticated;
+grant execute on function public.get_sign_in_account_kind() to authenticated;
+-- END 0061_sign_in_account_kind.sql
+
+-- =====================================================================================================================
+-- BEGIN 0062_technical_console_reads.sql  sha256=f16e816deaf334a47a68aa25faa7c74c1acb0416c117f079328470b3cbec7cae
+-- =====================================================================================================================
+-- Assigned technical administrators receive an allowlisted projection, never raw audit payloads.
+create function public.list_technical_audit(p_clinic_id uuid, p_limit integer default 50, p_before timestamptz default null, p_before_id uuid default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare v_org uuid; v_items jsonb; v_more boolean; v_last jsonb;
+begin
+  perform private.require_capability(p_clinic_id, 'admin.users');
+  if not exists (
+    select 1 from public.staff_memberships m where m.clinic_id=p_clinic_id and m.profile_id=auth.uid()
+      and m.role_code='tech_admin' and m.status='active' and m.valid_from<=now()
+      and (m.valid_until is null or m.valid_until>now())
+  ) then raise exception 'forbidden' using errcode='CV403'; end if;
+  if p_limit is null or p_limit<1 or p_limit>100 or (p_before is null) <> (p_before_id is null) then
+    raise exception 'use a limit from 1 to 100 and both cursor fields' using errcode='CV422';
+  end if;
+  select organization_id into v_org from public.clinics where id=p_clinic_id;
+  with selected as (
+    select a.id, a.server_time, a.action, a.entity_type, a.outcome, p.display_name
+      from private.audit_logs a left join public.profiles p on p.id=a.actor_id
+     where a.organization_id=v_org
+       and (
+         (a.entity_type='clinic' and a.entity_id=p_clinic_id and a.action in ('clinic.profile_changed','ops.check_recorded','staff.profile_lookup'))
+         or (a.entity_type='staff_membership' and a.action in ('staff_membership.requested','staff_membership.approved','staff_membership.revoked','staff.location_updated','staff.location_assigned')
+           and exists(select 1 from public.staff_memberships m where m.id=a.entity_id and m.clinic_id=p_clinic_id))
+         or (a.entity_type='staff_application' and a.action in ('staff_application.submitted','staff_application.withdrawn','staff_application.accepted','staff_application.rejected')
+           and exists(select 1 from public.staff_applications s where s.id=a.entity_id and s.clinic_id=p_clinic_id))
+         or (a.entity_type='profile' and a.action='staff_account.created' and a.after->>'clinicId'=p_clinic_id::text)
+       )
+       and (p_before is null or (a.server_time,a.id)<(p_before,p_before_id))
+     order by a.server_time desc,a.id desc limit p_limit+1
+  ), numbered as (select *,row_number() over(order by server_time desc,id desc) n from selected)
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'action',action,'actorName',display_name,'createdAt',server_time,'targetType',entity_type,'outcome',outcome) order by server_time desc,id desc) filter(where n<=p_limit),'[]'::jsonb),count(*)>p_limit
+    into v_items,v_more from numbered;
+  v_last:=v_items->(jsonb_array_length(v_items)-1);
+  return jsonb_build_object('items',v_items,'nextCursor',case when v_more then jsonb_build_object('before',v_last->>'createdAt','beforeId',v_last->>'id') else null end);
+end $$;
+revoke all on function public.list_technical_audit(uuid,integer,timestamptz,uuid) from public,anon,authenticated;
+grant execute on function public.list_technical_audit(uuid,integer,timestamptz,uuid) to authenticated;
+
+-- Historical revoked grants belong in the technical directory; clinical callers keep their current read.
+create function public.list_technical_staff_memberships(p_clinic_id uuid) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform private.require_capability(p_clinic_id, 'admin.users');
+  if not exists (
+    select 1 from public.staff_memberships m where m.clinic_id=p_clinic_id and m.profile_id=auth.uid()
+      and m.role_code='tech_admin' and m.status='active' and m.valid_from<=now()
+      and (m.valid_until is null or m.valid_until>now())
+  ) then raise exception 'forbidden' using errcode='CV403'; end if;
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'membershipId',m.id,'profileId',m.profile_id,'displayName',p.display_name,'role',m.role_code,
+      'capabilities',to_jsonb(m.capabilities),'status',m.status,'version',m.version,'validUntil',m.valid_until,
+      'requestedBy',m.requested_by,'approvedBy',m.approved_by,'createdAt',m.created_at,
+      'requiresClinicalApproval',private.membership_is_clinical(m.role_code,m.capabilities),
+      'barangay',m.barangay,'cityMunicipality',m.city_municipality
+    ) order by m.created_at desc,m.id desc),'[]'::jsonb)
+    from public.staff_memberships m join public.profiles p on p.id=m.profile_id
+    where m.clinic_id=p_clinic_id
+  );
+end $$;
+revoke all on function public.list_technical_staff_memberships(uuid) from public,anon,authenticated;
+grant execute on function public.list_technical_staff_memberships(uuid) to authenticated;
+-- END 0062_technical_console_reads.sql
+
+-- =====================================================================================================================
 -- Migration history (Supabase CLI table). Recorded in the same transaction as the schema.
 -- =====================================================================================================================
 create schema if not exists supabase_migrations;
@@ -12114,7 +12197,9 @@ insert into supabase_migrations.schema_migrations (version, name, statements) va
   ('0057', 'card_review_lock_order', null),
   ('0058', 'staff_location', null),
   ('0059', 'vaccination_care_summary', null),
-  ('0060', 'vaccination_care_corrections', null);
+  ('0060', 'vaccination_care_corrections', null),
+  ('0061', 'sign_in_account_kind', null),
+  ('0062', 'technical_console_reads', null);
 
 -- Ask PostgREST to reload its schema cache (delivered at commit).
 notify pgrst, 'reload schema';

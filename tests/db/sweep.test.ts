@@ -24,6 +24,7 @@ let fns: Fn[] = [];
 /** Commands that are meant to answer any signed-in user (they only expose what that user is entitled to, or public clinic information). */
 const OPEN_TO_SIGNED_IN = new Map<string, string>([
   ["get_my_context", "own profile and memberships"],
+  ["get_sign_in_account_kind", "own portal classification only; no other account or clinic data"],
   ["list_public_clinics", "public clinic directory"],
   ["my_children", "own children only"],
   ["my_appointments", "own family's appointments only"],

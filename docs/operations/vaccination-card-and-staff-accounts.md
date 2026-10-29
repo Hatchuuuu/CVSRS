@@ -6,9 +6,13 @@ Local policy update, 15 October 2026: at the owner's request, this machine's exi
 
 Signed-in navigation uses one left sidebar on desktop. Staff see their current clinic, role and authorized clinic tools; parents see their family links. Messages, Account and Sign out are in the same sidebar. On tablets and phones, open Menu to access these destinations; Escape closes it and returns focus. The current destination is highlighted. Public pages retain their public navigation when signed out.
 
+Staff accounts sign in only at `/evactrackstafflogin`; family accounts sign in at `/sign-in`. The server checks stored memberships and staff applications before committing session cookies. Pending, suspended and previously admitted staff remain staff accounts; this classification never grants clinic permissions. Account type cannot be changed through an editable profile field or a browser selector.
+
 ## Families
 
 Create an account from the landing page. Signup gives immediate access without confirmation email. Register a child under My Children, then open the child's record and its Vaccination card section. You can submit a card while guardian verification is pending; clinic-reviewed history and notes remain protected until guardian verification.
+
+Child registration also accepts optional sex for clinical reference and home-address details: province, city/municipality, barangay, house/street/sitio/purok and postal code. Unknown details may remain blank. The address is saved as one full-address field and appears on the authorized clinic child record; later corrections use the existing address edit/request workflow.
 
 Enter card rows manually, choose Take photo on a supported camera device, or Upload image. Images are limited to 8 MB and a submission to 20 entries. Scanning fills an editable draft. All rows remain visible; checking the paper card is required before submission. The image itself stays in the browser and is not persisted by CVSRS.
 

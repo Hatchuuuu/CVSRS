@@ -4,7 +4,7 @@ import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
 
 export default defineConfig([
-  globalIgnores(["public/ocr/**"]),
+  globalIgnores(["public/ocr/**", "tmp/three-portals/phases-*/**"]),
   ...next,
   ...coreWebVitals,
   ...typescript,

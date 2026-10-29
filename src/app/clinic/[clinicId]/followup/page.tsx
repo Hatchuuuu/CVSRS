@@ -1,3 +1,4 @@
+import { personName } from "@/lib/person-name";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -63,8 +64,12 @@ export default async function Followup({ params, searchParams }: { params: Promi
 
   return (
     <>
-      <PageTitle title="Follow-up list" lead="Children who are behind or due according to your clinic's approved schedule. Only what the schedule says: the system adds nothing of its own." />
+      <PageTitle dashboard title="Follow-up list" lead="Children who are behind or due according to your clinic's approved schedule. Only what the schedule says: the system adds nothing of its own." />
       <OutcomeNoticeView noticeKey={`followup:${clinicId}`} />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface px-5 py-4 text-sm">
+        <p><strong>{items.length}</strong> records on this page{w.items.length > 50 ? " · More results available below" : ""}</p>
+        <p className="text-ink-soft">{w.staleChildren} records need a schedule refresh</p>
+      </div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <nav aria-label="Filter" className="flex flex-wrap gap-2">
           {FILTERS.map(([k, label]) => (
@@ -101,7 +106,7 @@ export default async function Followup({ params, searchParams }: { params: Promi
                 <p className="font-bold">
                   {href ? (
                     <Link href={href} className="text-primary">
-                      {i.childName}
+                      {personName(i.childName)}
                     </Link>
                   ) : (
                     i.childName
@@ -126,7 +131,7 @@ export default async function Followup({ params, searchParams }: { params: Promi
               </ul>
               {i.guardian ? (
                 <p className="text-sm">
-                  Guardian: <span className="font-semibold">{i.guardian.name}</span>
+                  Guardian: <span className="font-semibold">{personName(i.guardian.name)}</span>
                   {i.guardian.phone ? (
                     <>
                       {" · "}
@@ -143,7 +148,7 @@ export default async function Followup({ params, searchParams }: { params: Promi
                   {i.lastAttempt.note ? ` — ${i.lastAttempt.note}` : ""} ({i.attempts} attempt{i.attempts === 1 ? "" : "s"})
                 </p>
               ) : null}
-              <AttemptForm clinicId={clinicId} childId={i.childId} childName={i.childName} />
+              <AttemptForm clinicId={clinicId} childId={i.childId} childName={personName(i.childName)} />
             </li>
             );
           })}

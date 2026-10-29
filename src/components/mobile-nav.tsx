@@ -1,17 +1,18 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import { useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useCloseOnPathChange, useDisclosure } from "@/components/disclosure";
 
 /**
  * Header navigation below `sm`: one labelled menu button (with the unread count) opens every destination, the
- * theme choice and sign-out in a panel under the header. Closes on Escape (focus returns), outside press, or
+ * in a panel under the header. Closes on Escape (focus returns), outside press, or
  * navigation. The links themselves are rendered on the server and passed in as children.
  */
 export function MobileNav({ unread, children, sidebar = false }: { unread: number | null; children: ReactNode; sidebar?: boolean }) {
   const path = usePathname();
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const { open, setOpen, close, containerProps, triggerProps, panelProps } = useDisclosure();
   useCloseOnPathChange(path, open, setOpen);
 
@@ -29,6 +30,7 @@ export function MobileNav({ unread, children, sidebar = false }: { unread: numbe
       <button
         type="button"
         {...triggerProps}
+        disabled={!hydrated}
         aria-label={label}
         className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3.5 text-sm font-semibold text-ink hover:bg-sunken"
       >

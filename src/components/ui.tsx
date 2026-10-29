@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, CheckCircle2, CircleHelp, Clock, Info, SearchCheck, ShieldCheck } from "lucide-react";
+import "./application.css";
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -9,7 +10,7 @@ export function Card({ children, className, interactive, ...rest }: ComponentPro
   return (
     <section
       className={cx(
-        "rounded-card border border-line bg-surface p-5 sm:p-6",
+        "app-card rounded-card border border-line bg-surface p-5 sm:p-6",
         interactive && "card-elevated card-interactive cursor-pointer",
         className
       )}
@@ -21,9 +22,9 @@ export function Card({ children, className, interactive, ...rest }: ComponentPro
 }
 
 /** Unboxed page section with an icon-accented title. */
-export function Section({ title, id, description, action, children, className }: { title: string; id: string; description?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Section({ title, id, description, action, children, className, panel = false }: { title: string; id: string; description?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; panel?: boolean }) {
   return (
-    <section aria-labelledby={id} className={cx("mt-8 border-t border-line pt-8", className)}>
+    <section aria-labelledby={id} className={cx("app-section", panel ? "rounded-card border border-line bg-surface p-5 sm:p-7" : "mt-8 border-t border-line pt-8", className)}>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
           <h2 id={id} className="text-xl font-bold text-ink">
@@ -38,17 +39,17 @@ export function Section({ title, id, description, action, children, className }:
   );
 }
 
-export function PageTitle({ title, lead, action, badge }: { title: string; lead?: ReactNode; action?: ReactNode; badge?: string }) {
+export function PageTitle({ title, lead, action, badge, dashboard = false }: { title: string; lead?: ReactNode; action?: ReactNode; badge?: string; dashboard?: boolean }) {
   return (
-    <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
-      <div className="min-w-0 flex-1">
+    <div className={cx("app-page-title mb-8 flex flex-wrap items-start justify-between gap-5", dashboard ? "pb-2" : "border-b border-line pb-6")}>
+      <div className="min-w-0 flex-1 basis-full sm:basis-0">
         {badge ? (
           <span className="mb-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-strong">
             <ShieldCheck aria-hidden className="size-3.5 text-primary" />
             {badge}
           </span>
         ) : null}
-        <h1 className="text-2xl font-bold text-ink sm:text-3xl">{title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{title}</h1>
         {lead ? <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-soft">{lead}</p> : null}
       </div>
       {action}
@@ -216,16 +217,15 @@ export function ChildBanner({ name, recordNo, meta, chips, sticky }: { name: str
       role="region"
       aria-label="Child identity"
       className={cx(
-        "mb-8 rounded-card border border-primary/30 bg-primary-soft p-5 sm:p-6",
+          "mb-6 rounded-card border border-line bg-surface p-5 sm:p-6",
         sticky && "sm:sticky sm:top-[calc(var(--header-h)+1rem)] sm:z-20"
       )}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <div>
-          <span className="text-xs font-semibold text-primary-strong">Child medical profile</span>
           <h1 className="break-words text-2xl font-bold text-ink sm:text-3xl">{name}</h1>
         </div>
-        <p className="tnum break-all text-xs font-semibold text-primary-strong">
+          <p className="tnum break-all text-sm font-semibold text-ink-soft">
           Record #{recordNo}
         </p>
       </div>

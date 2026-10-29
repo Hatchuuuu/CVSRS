@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -75,7 +77,7 @@ function Roster({ clinicId, sessionId, recordHref }: { clinicId: string; session
               return (
                 <li key={r.appointmentId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
                   <span className="min-w-0 break-words">
-                    {href ? <Link href={href} className="inline-flex min-h-11 items-center font-semibold text-primary">{r.childName}</Link> : <span className="font-semibold">{r.childName}</span>}
+                    {href ? <Link href={href} className="inline-flex min-h-11 items-center font-semibold text-primary">{personName(r.childName)}</Link> : <span className="font-semibold">{personName(r.childName)}</span>}
                     <span className="tnum text-ink-soft"> · {r.recordNo} · {r.channel === "online" ? "booked online" : "booked by staff"}</span>
                   </span>
                   <StatusChip tone={r.status === "no_show" ? "attention" : r.status === "fulfilled" ? "success" : "info"}>{ROSTER_STATUS[r.status] ?? r.status}</StatusChip>

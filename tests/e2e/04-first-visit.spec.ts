@@ -188,9 +188,10 @@ test("a family accepts the clinic's privacy notice, then registers a child; the 
   await signIn(page, account("parent"), NEW_PASSWORD);
   await expect(page).toHaveURL(/\/children/);
 
+  await page.getByRole("link", { name: "Register a child", exact: true }).first().click();
   const add = page.getByRole("region", { name: "Register a new child record" });
   const fill = async () => {
-    await add.getByLabel("Clinic").selectOption({ label: "E2E Health Center" });
+    await add.getByLabel("Clinic", { exact: true }).selectOption({ label: "E2E Health Center" });
     await add.getByLabel("Child's given name(s)").fill(GIVEN);
     await add.getByLabel("Child's family name").fill(FAMILY);
     await add.getByLabel("How well do you know the birth date?").selectOption("exact");
@@ -215,8 +216,9 @@ test("a family accepts the clinic's privacy notice, then registers a child; the 
   await expect(add.getByRole("status").filter({ hasText: "Saved — waiting for clinic verification" })).toBeVisible();
 
   // Persisted: after a reload the child is listed, waiting for the clinic.
+  await page.goto("/children");
   await page.reload();
-  const card = page.locator('[aria-label="Children"]').locator("div.card-elevated").filter({ hasText: FAMILY });
+  const card = page.getByRole("list", { name: "Children", exact: true }).getByRole("listitem").filter({ hasText: FAMILY });
   await expect(card).toHaveCount(1);
   const childName = (await card.getByRole("heading", { level: 2 }).textContent())!.trim();
   expect(childName).toContain(GIVEN);

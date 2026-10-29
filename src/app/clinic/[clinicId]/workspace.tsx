@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import Link from "next/link";
 import { QrScanner } from "./qr-scanner";
 import { useRouter } from "next/navigation";
@@ -26,7 +28,7 @@ export function ChildList({ clinicId, items }: { clinicId: string; items: Hit[] 
         <li key={h.childId}>
           <Link href={`/clinic/${clinicId}/children/${h.childId}`} className="flex flex-wrap items-center justify-between gap-2 p-3 hover:bg-canvas">
             <span>
-              <span className="block font-bold">{h.displayName}</span>
+              <span className="block font-bold">{personName(h.displayName)}</span>
               <span className="text-sm text-ink-soft">
                 {h.localRecordNo} · {fmt(h.dob)}
               </span>
@@ -251,7 +253,7 @@ export function RegisterChildForm({ clinicId }: { clinicId: string }) {
               {result.candidates.map((c) => (
                 <li key={c.childId}>
                   <Link className="font-semibold underline" href={`/clinic/${clinicId}/children/${c.childId}`} target="_blank">
-                    {c.displayName}
+                    {personName(c.displayName)}
                   </Link>{" "}
                   ({c.localRecordNo}, {fmt(c.dob)}
                   {c.sameDob ? ", same date of birth" : ""})

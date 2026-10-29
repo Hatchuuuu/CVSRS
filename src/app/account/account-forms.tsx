@@ -1,13 +1,15 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Button, Notice, ResultRegion, SelectField, TextField } from "@/components/ui";
 import { PASSWORD_HINT, PASSWORD_MIN_LENGTH, passwordProblem } from "@/lib/auth/password-policy";
 import { useMutation } from "@/lib/client/api";
 import { changePassword } from "@/lib/client/password";
+import { personName } from "@/lib/person-name";
 
 /** Name and language (update_my_profile). The name is what clinic staff see when they verify you. */
 export function ProfileForm({ displayName, locale, needsName }: { displayName: string; locale: string; needsName: boolean }) {
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const router = useRouter();
   const { state, run } = useMutation<{ displayName: string }>("/api/v1/me/profile");
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -18,19 +20,22 @@ export function ProfileForm({ displayName, locale, needsName }: { displayName: s
   }
   const fe = state.phase === "error" ? (state.error.fieldErrors ?? {}) : {};
   return (
-    <form onSubmit={submit} className="max-w-md">
+    <form method="post" onSubmit={submit} className="w-full">
+      <fieldset disabled={!hydrated} className="min-w-0">
+      <legend className="sr-only">Profile details</legend>
       <TextField
         id="acct-name"
         name="displayName"
         label="Full name"
         autoComplete="name"
-        defaultValue={needsName ? "" : displayName}
+        defaultValue={needsName ? "" : personName(displayName)}
+        onBlur={event => { event.currentTarget.value = personName(event.currentTarget.value); }}
         required
         maxLength={120}
-        hint="Use the name on your ID. Clinic staff see it when they confirm you are the child's guardian."
+        hint="Use the name on your ID so clinic staff can identify your account."
         error={fe.displayName}
       />
-      <SelectField id="acct-locale" name="locale" label="Language" defaultValue={locale === "fil" ? "fil" : "en"} error={fe.locale}>
+      <SelectField id="acct-locale" name="locale" label="Language" hint="Saves your preferred language. The app currently displays text in English." defaultValue={locale === "fil" ? "fil" : "en"} error={fe.locale}>
         <option value="en">English</option>
         <option value="fil">Filipino</option>
       </SelectField>
@@ -42,7 +47,8 @@ export function ProfileForm({ displayName, locale, needsName }: { displayName: s
         ) : null}
         {state.phase === "success" ? <Notice tone="success" role="status" title="Saved" /> : null}
       </ResultRegion>
-      <Button type="submit" pending={state.phase === "pending"}>Save</Button>
+      <Button type="submit" disabled={!hydrated} pending={state.phase === "pending"}>Save</Button>
+      </fieldset>
     </form>
   );
 }
@@ -53,6 +59,7 @@ export function ProfileForm({ displayName, locale, needsName }: { displayName: s
  * is asked to sign in again first (docs/engineering/manual-setup.md).
  */
 export function PasswordForm() {
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "danger" | "attention" | "success"; text: string } | null>(null);
@@ -81,12 +88,13 @@ export function PasswordForm() {
     }
   }
   return (
-    <form onSubmit={submit} className="max-w-md" aria-busy={busy}>
-      <fieldset disabled={busy}>
+    <form method="post" onSubmit={submit} className="w-full" aria-busy={busy}>
+      <fieldset disabled={!hydrated || busy} className="min-w-0">
+        <legend className="sr-only">Change password</legend>
         <TextField id="pw-next" name="next" type="password" label="New password" hint={PASSWORD_HINT} autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} required />
         <TextField id="pw-confirm" name="confirm" type="password" label="Type the new password again" autoComplete="new-password" minLength={PASSWORD_MIN_LENGTH} required />
         <ResultRegion>{message ? <Notice tone={message.tone} role={message.tone === "success" ? "status" : "alert"}>{message.text}</Notice> : null}</ResultRegion>
-        <Button type="submit" pending={busy}>Change password</Button>
+        <Button type="submit" disabled={!hydrated} pending={busy}>Change password</Button>
       </fieldset>
     </form>
   );

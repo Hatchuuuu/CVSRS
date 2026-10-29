@@ -1,11 +1,27 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import picomatch from "picomatch";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import config from "../../next.config";
 
 const ROOT = join(import.meta.dirname, "..", "..");
 const APP = join(ROOT, "src", "app");
+
+afterEach(() => { vi.unstubAllEnvs(); });
+
+it("retains warmed handlers throughout a bounded isolated browser phase", async () => {
+  vi.stubEnv("CVSRS_DIST_DIR", ".next-e2e");
+  vi.resetModules();
+  const { default: isolated } = await import("../../next.config");
+  expect(isolated.onDemandEntries?.maxInactiveAge).toBe(3_600_000);
+});
+
+it("preserves default handler retention outside the isolated browser run", async () => {
+  vi.stubEnv("CVSRS_DIST_DIR", ".next");
+  vi.resetModules();
+  const { default: normal } = await import("../../next.config");
+  expect(normal.onDemandEntries).toBeUndefined();
+});
 
 function routeFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

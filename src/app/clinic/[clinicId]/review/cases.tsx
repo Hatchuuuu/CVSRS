@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -62,7 +64,7 @@ export function CaseCard({ clinicId, c, canVerify, canResolve, canEdit, canAppro
   const renderer = caseRenderer({ kind: c.kind, evidence });
   const safe = { ...c, evidence };
   const mine = !!c.createdBy && c.createdBy === myId;
-  const regionName = [caseTitle(renderer), c.child ? `${c.child.displayName} (${c.child.localRecordNo})` : null, position ? `item ${position.n} of ${position.of}` : `case ${c.caseId.slice(0, 8)}`].filter(Boolean).join(", ");
+  const regionName = [caseTitle(renderer), c.child ? `${personName(c.child.displayName)} (${c.child.localRecordNo})` : null, position ? `item ${position.n} of ${position.of}` : `case ${c.caseId.slice(0, 8)}`].filter(Boolean).join(", ");
   return (
     <Card aria-label={regionName}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -143,7 +145,7 @@ function AppointmentCase({ clinicId, c, allowed }: { clinicId: string; c: Review
       <p>
         {c.child ? (
           <>
-            <strong>{c.child.displayName}</strong> ({c.child.localRecordNo})
+            <strong>{personName(c.child.displayName)}</strong> ({c.child.localRecordNo})
           </>
         ) : (
           "A child"
@@ -169,7 +171,7 @@ function GenericCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCase
       <p>{c.reason ? c.reason : "No reason was recorded for this item."}</p>
       {c.child ? (
         <p className="text-ink-soft">
-          Child: {c.child.displayName} ({c.child.localRecordNo})
+          Child: {personName(c.child.displayName)} ({c.child.localRecordNo})
         </p>
       ) : null}
       <RecordLink clinicId={clinicId} childId={c.childId}>
@@ -228,7 +230,7 @@ function LinkCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCase; a
   return (
     <div>
       <p>
-        <strong>{c.guardianName ?? "A guardian"}</strong> asks to be linked to {ev.childName ? <>a child named <strong>{ev.childName}</strong></> : "a child (no name given)"}
+        <strong>{personName(c.guardianName ?? "A guardian")}</strong> asks to be linked to {ev.childName ? <>a child named <strong>{personName(ev.childName)}</strong></> : "a child (no name given)"}
         {ev.dob ? ` (born ${formatDate(ev.dob)})` : ""} as <strong>{(ev.relationship ?? "other").replace("_", " ")}</strong>.
       </p>
       {ev.note ? <p className="text-ink-soft">Note: {ev.note}</p> : null}
@@ -240,7 +242,7 @@ function LinkCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCase; a
             <h3 className="mb-2 font-bold">Find the child, then approve</h3>
             <form onSubmit={search} role="search" className="flex flex-wrap items-end gap-3">
               <div className="min-w-48 flex-1">
-                <TextField id={`q-${c.caseId}`} name="q" label="Search this clinic" defaultValue={ev.childName ?? ""} onChange={() => { searchSequence.current++; setSearchPhase("idle"); setHits(null); setPicked(null); }} />
+                <TextField id={`q-${c.caseId}`} name="q" label="Search this clinic" defaultValue={personName(ev.childName ?? "")} onChange={() => { searchSequence.current++; setSearchPhase("idle"); setHits(null); setPicked(null); }} />
               </div>
               <div className="mb-4">
                 <Button type="submit" variant="secondary" disabled={searchPhase === "pending"}>
@@ -259,7 +261,7 @@ function LinkCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCase; a
                   {hits.map((h) => (
                     <label key={h.childId} className="flex min-h-11 items-center gap-2">
                       <input type="radio" name={`pick-${c.caseId}`} className="size-5" checked={picked?.childId === h.childId} onChange={() => setPicked(h)} />
-                      {h.displayName} · {h.localRecordNo} · {dob(h.dob)}
+                      {personName(h.displayName)} · {h.localRecordNo} · {dob(h.dob)}
                     </label>
                   ))}
                 </fieldset>
@@ -274,7 +276,7 @@ function LinkCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCase; a
                   <option value="court_document">Court document</option>
                 </SelectField>
                 <Button type="submit" disabled={decide.state.phase === "pending"}>
-                  Approve link to {picked.displayName}
+                  Approve link to {personName(picked.displayName)}
                 </Button>
               </form>
             ) : null}
@@ -299,7 +301,7 @@ function DuplicateCase({ clinicId, c, allowed }: { clinicId: string; c: ReviewCa
   const distinct = useMutation(`/api/v1/clinics/${clinicId}/review-cases/${c.caseId}/resolve`);
   const person = (p: ReviewCase["child"], id: string | null) => (
     <div className="rounded-control border border-line p-3">
-      <p className="font-bold">{p?.displayName ?? "Unavailable"}</p>
+      <p className="font-bold">{personName(p?.displayName ?? "Unavailable")}</p>
       {p ? (
         <p className="text-sm text-ink-soft">
           {p.localRecordNo} · {dob(p.dob)}
@@ -548,7 +550,7 @@ function StockExceptionCase({ clinicId, c, allowed }: { clinicId: string; c: Rev
   return (
     <div>
       <p>
-        Care was recorded{c.child ? ` for ${c.child.displayName} (${c.child.localRecordNo})` : ""}, but no dose was deducted from stock. Check the lot and quantity, and post a count if the books are wrong.
+        Care was recorded{c.child ? ` for ${personName(c.child.displayName)} (${c.child.localRecordNo})` : ""}, but no dose was deducted from stock. Check the lot and quantity, and post a count if the books are wrong.
       </p>
       <ul className="my-2 list-disc pl-5 text-ink-soft">
         <li>Lot written on the record: {lot ?? NOT_RECORDED}</li>
@@ -587,7 +589,7 @@ function CorrectionCase({ clinicId, c, allowed, mine }: { clinicId: string; c: R
     <div>
       <p>
         <strong>{kind ? (KIND_TEXT[kind] ?? kind) : "Correction"}</strong>
-        {c.child ? ` for ${c.child.displayName} (${c.child.localRecordNo})` : ""}.{c.reason ? ` Reason: “${c.reason}”.` : ""}
+        {c.child ? ` for ${personName(c.child.displayName)} (${c.child.localRecordNo})` : ""}.{c.reason ? ` Reason: “${c.reason}”.` : ""}
       </p>
       <ul className="my-2 list-disc pl-5 text-ink-soft">
         {Object.entries(p).filter(([, v]) => v !== undefined && v !== null && v !== "").map(([k, v]) => (
@@ -653,7 +655,7 @@ function ExceptionCase({ clinicId, c, allowed, mine }: { clinicId: string; c: Re
   return (
     <div>
       <p>
-        Care recorded as an exception{c.child ? ` for ${c.child.displayName} (${c.child.localRecordNo})` : ""}.{c.reason ? ` ${c.reason}` : ""}
+        Care recorded as an exception{c.child ? ` for ${personName(c.child.displayName)} (${c.child.localRecordNo})` : ""}.{c.reason ? ` ${c.reason}` : ""}
       </p>
       <ul className="my-2 list-disc pl-5 text-ink-soft">
         {problems.map((p) => (

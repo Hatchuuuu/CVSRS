@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useConfirmStep } from "@/components/confirm-step";
@@ -281,7 +283,7 @@ export function LotTraceList({ trace }: { trace: TraceRow[] }) {
           </li>
         ) : (
           <li key={t.eventId} className="py-2">
-            <strong>{t.childName}</strong> <span className="tnum text-ink-soft">{t.recordNo} · {formatDate(t.administeredOn)} · {traceStatus(t)}</span>
+            <strong>{personName(t.childName)}</strong> <span className="tnum text-ink-soft">{t.recordNo} · {formatDate(t.administeredOn)} · {traceStatus(t)}</span>
           </li>
         ),
       )}

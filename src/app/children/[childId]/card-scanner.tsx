@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Camera, X } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { Camera, Upload, X } from "lucide-react";
 import { Button, Notice } from "@/components/ui";
 import { parseCardText, type CardCandidate } from "@/lib/card-ocr/parse";
 import type { Worker } from "tesseract.js";
@@ -8,6 +8,7 @@ import type { Worker } from "tesseract.js";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export function CardScanner({ onRows, onScanningChange, disabled = false }: { onRows: (rows: CardCandidate[]) => void; onScanningChange?: (scanning: boolean) => void; disabled?: boolean }) {
+  const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [status, setStatus] = useState<"idle" | "scanning" | "error" | "done">("idle");
   const [message, setMessage] = useState("");
   const abort = useRef<AbortController | null>(null);
@@ -66,15 +67,18 @@ export function CardScanner({ onRows, onScanningChange, disabled = false }: { on
     <section aria-labelledby="scan-card-heading" className="mb-6 border-b border-line pb-6">
       <h3 id="scan-card-heading" className="mb-2 text-lg font-bold">Scan the vaccination card</h3>
       <p className="mb-3 max-w-prose text-sm text-ink-soft">The photo is processed only in this browser and is not uploaded or saved. You can always enter the card manually.</p>
-      <label className="mr-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-line-strong bg-surface px-4 py-2 font-semibold hover:bg-sunken focus-within:ring-2 focus-within:ring-primary">
+      <div className="flex flex-wrap items-center gap-3">
+      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 has-[:disabled]:cursor-wait has-[:disabled]:opacity-50 rounded-control border border-line-strong bg-surface px-4 py-2 font-semibold hover:bg-sunken focus-within:ring-2 focus-within:ring-primary">
         <Camera aria-hidden className="size-4" /> Take photo
-        <input className="sr-only" type="file" accept="image/*" capture="environment" onChange={choose} disabled={disabled || status === "scanning"} />
+        <input className="sr-only" type="file" accept="image/*" capture="environment" onChange={choose} disabled={!hydrated || disabled || status === "scanning"} />
       </label>
-      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-line-strong bg-surface px-4 py-2 font-semibold hover:bg-sunken focus-within:ring-2 focus-within:ring-primary">
-        Upload image
-        <input className="sr-only" type="file" accept="image/*" onChange={choose} disabled={disabled || status === "scanning"} />
+      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 has-[:disabled]:cursor-wait has-[:disabled]:opacity-50 rounded-control border border-line-strong bg-surface px-4 py-2 font-semibold hover:bg-sunken focus-within:ring-2 focus-within:ring-primary">
+        <Upload aria-hidden className="size-4" /> Upload image
+        <input className="sr-only" type="file" accept="image/*" onChange={choose} disabled={!hydrated || disabled || status === "scanning"} />
       </label>
-      {status === "scanning" ? <Button className="ml-3" variant="secondary" type="button" onClick={() => { cancel(); setStatus("idle"); setMessage(""); }}><X aria-hidden className="size-4" /> Cancel</Button> : null}
+      {status === "scanning" ? <Button variant="secondary" type="button" onClick={() => { cancel(); setStatus("idle"); setMessage(""); }}><X aria-hidden className="size-4" /> Cancel</Button> : null}
+      <a href="#card-vaccine-0" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">Enter details manually</a>
+      </div>
       {message ? <Notice tone={status === "error" ? "attention" : status === "done" ? "success" : "info"} role="status" title={status === "error" ? "Card not read" : status === "done" ? "Draft ready to review" : "Reading card"}>{message}</Notice> : null}
     </section>
   );

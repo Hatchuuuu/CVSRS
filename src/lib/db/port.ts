@@ -3,6 +3,7 @@ import "server-only";
 /** Every database command the API may call. Anything else is refused: no arbitrary function names reach the DB. */
 export const RPC_ALLOWLIST = [
   "get_my_context",
+  "get_sign_in_account_kind",
   "list_public_clinics",
   "my_children",
   "create_child_provisional",
@@ -168,6 +169,8 @@ export const RPC_ALLOWLIST = [
   "list_content",
   "guardian_care_content",
   "search_audit",
+  "list_technical_audit",
+  "list_technical_staff_memberships",
   "record_ops_check",
   "get_ops_status",
   // 0037: day closure, staff bookings and sessions, unblocked reviews, accounts, real-world end states

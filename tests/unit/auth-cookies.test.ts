@@ -54,7 +54,7 @@ describe("session cookie policy", () => {
 });
 
 describe("production sign-in Set-Cookie", () => {
-  it("is Secure, SameSite=Lax, Path=/ and bounded by the configured Max-Age", async () => {
+  it.each([["staff", 200], ["family", 403]] as const)("commits cookies only for admitted account kind %s", async (kind, status) => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("CVSRS_PUBLIC_URL", "https://app.example");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
@@ -67,13 +67,16 @@ describe("production sign-in Set-Cookie", () => {
     const jwt = `e30.${Buffer.from(JSON.stringify({ exp, sub: "u", aal: "aal1" })).toString("base64url")}.sig`;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL) => String(input).startsWith("https://redis.example")
       ? Response.json({ result: [1, 60_000] })
+      : String(input).includes("/rest/v1/rpc/get_sign_in_account_kind") ? Response.json(kind)
+      : String(input).includes("/auth/v1/logout") ? new Response(null, { status: 204 })
       : Response.json({ access_token: jwt, refresh_token: "r", token_type: "bearer", expires_in: 3600, expires_at: exp,
         user: { id: "11111111-1111-4111-8111-111111111111", aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() } }));
     const res = await signIn(new Request("https://app.example/auth/sign-in", {
       method: "POST", headers: { origin: "https://app.example", "content-type": "application/json", "x-client-ip": "198.51.100.7" },
-      body: JSON.stringify({ email: "staff@clinic.example", password: "correct horse battery" }),
+      body: JSON.stringify({ email: "staff@clinic.example", password: "correct horse battery", next: "/clinic" }),
     }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(status);
+    if(status === 403) { expect(sets).toHaveLength(0); return; }
     expect(sets.length).toBeGreaterThan(0);
     for (const s of sets) {
       const header = (() => { const r = NextResponse.next(); r.cookies.set(s.name, s.value, s.options); return r.headers.get("set-cookie") ?? ""; })();

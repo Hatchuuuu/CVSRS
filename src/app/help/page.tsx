@@ -18,16 +18,21 @@ interface Item {
 
 export default async function Help() {
   const { rpc } = await requireViewer();
-  const items = (await rpc.rpc<Item[]>("guardian_care_content")) ?? [];
+  const items = await rpc.rpc<Item[]>("guardian_care_content");
+  if (!items) throw new Error("Care information could not be loaded. Please try again.");
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <PageTitle title="Care information" lead="Information from your child's clinic. It is written by the clinic and checked by a second person before you see it." />
+    <div className="w-full">
+      <PageTitle dashboard title="Care information" lead="Information from your child's clinic. It is written by the clinic and checked by a second person before you see it." />
       {items.length === 0 ? (
         <EmptyState title="Your clinic has not published any information here yet">If you have a question, please contact the clinic.</EmptyState>
       ) : (
-        <div className="space-y-6">
-          {items.map((i) => (
-            <article key={`${i.clinic}-${i.code}`} className="rounded-card border border-line bg-surface p-5">
+        <div className="space-y-8">
+          <nav aria-label="Care topics" className="rounded-card border border-line bg-surface p-5">
+            <h2 className="font-bold">Browse clinic guidance</h2>
+            <ul className="mt-2 grid gap-x-6 sm:grid-cols-2">{items.map((item, index) => <li key={`${item.clinic}-${item.code}`}><a href={`#care-topic-${index}`} className="inline-flex min-h-11 items-center font-semibold text-primary">{item.title}<span className="sr-only"> , {item.clinic}</span></a></li>)}</ul>
+          </nav>
+          {items.map((i, index) => (
+            <article id={`care-topic-${index}`} key={`${i.clinic}-${i.code}`} className="rounded-card border border-line bg-surface p-5">
               <h2 className="text-xl font-bold">{i.title}</h2>
               <p className="mb-3 text-sm text-ink-soft">
                 {i.clinic}

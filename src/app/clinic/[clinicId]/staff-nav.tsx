@@ -6,6 +6,7 @@ import { useCloseOnPathChange, useDisclosure } from "@/components/disclosure";
 
 
 export interface NavItem {
+  group: "daily" | "records" | "management";
   href: string;
   label: string;
   icon: "today" | "search" | "review" | "stock" | "clinical" | "access" | "reports" | "forms" | "questions" | "followup" | "transfers" | "content" | "settings" | "admin";
@@ -41,7 +42,12 @@ export function StaffNav({ items, embedded = false }: { items: NavItem[]; embedd
         {...panelProps}
         className={embedded ? "flex flex-col gap-1" : `${open ? "mt-2 grid" : "hidden"} gap-1 sm:grid-cols-2 lg:mt-0 lg:flex lg:flex-col`}
       >
-        {items.map((i) => {
+        {([ ["daily", "Clinic day"], ["records", "Records and review"], ["management", "Management"] ] as const).map(([group, label]) => {
+          const grouped = items.filter(item => item.group === group);
+          if (!grouped.length) return null;
+          return <div key={group} role="group" aria-label={label} className="flex min-w-0 flex-col gap-1">
+            <p className="px-4 pb-1 pt-4 text-xs font-bold uppercase tracking-wide text-ink-soft">{label}</p>
+            {grouped.map((i) => {
           const Icon = ICONS[i.icon];
           const active = isActive(i);
           return (
@@ -51,16 +57,18 @@ export function StaffNav({ items, embedded = false }: { items: NavItem[]; embedd
 
 
               aria-current={active ? "page" : undefined}
-              className={`focus-inset group relative inline-flex min-h-11 items-center gap-2.5 rounded-control border px-3 text-sm font-semibold no-underline transition-colors duration-150 ${
+              className={`focus-inset group relative inline-flex min-h-12 items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold no-underline transition-colors duration-150 ${
                 active
-                  ? "border-transparent bg-primary-soft text-primary-strong font-bold"
+                  ? "border-transparent bg-primary text-on-primary font-bold"
                   : "border-transparent text-ink hover:bg-sunken hover:text-primary-strong"
               }`}
             >
-              <Icon aria-hidden className={`size-4.5 shrink-0 transition-colors ${active ? "text-primary" : "text-ink-soft group-hover:text-primary"}`} />
+              <Icon aria-hidden className={`size-4.5 shrink-0 transition-colors ${active ? "text-on-primary" : "text-ink-soft group-hover:text-primary"}`} />
               <span>{i.label}</span>
             </Link>
           );
+            })}
+          </div>;
         })}
       </div>
     </nav>

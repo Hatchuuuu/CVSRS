@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SignInFeedback } from "@/components/sign-in-feedback";
 import { NurseMascot } from "@/components/nurse-mascot";
 import { AuthPage } from "@/components/auth-page";
 import { SignInUnavailable, signUpMode } from "@/app/sign-up/availability";
@@ -12,6 +13,7 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   const messages = signInMessages(params);
   const mode = await signUpMode();
   return (
+    <SignInFeedback failed={Boolean(messages.initialError)}>
     <AuthPage
       headingVisual={<NurseMascot size={88} className="shrink-0 rounded-full [&_button:focus-visible]:outline-2 [&_button:focus-visible]:outline-offset-2 [&_button:focus-visible]:outline-primary" />}
       title="Welcome back"
@@ -32,5 +34,6 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
         />
       )}
     </AuthPage>
+    </SignInFeedback>
   );
 }

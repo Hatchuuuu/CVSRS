@@ -1,5 +1,6 @@
 "use client";
 
+import { useSignInFeedback } from "@/components/sign-in-feedback";
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldAlert } from "lucide-react";
@@ -38,6 +39,7 @@ export function SignInForm({ initialError, notice, defaultEmail, audience = "fam
   alternate: AlternateLink;
 }) {
   const copy = COPY[audience];
+  const feedback = useSignInFeedback();
   const hydrated = useSyncExternalStore(() => () => {}, () => true, () => false);
   const pending = useRef(false);
   const [email, setEmail] = useState(defaultEmail ?? "");
@@ -52,6 +54,7 @@ export function SignInForm({ initialError, notice, defaultEmail, audience = "fam
     pending.current = true;
     setBusy(true);
     setError("");
+    feedback?.setMood("neutral");
     try {
       const response = await fetch("/auth/sign-in", {
         method: "POST",
@@ -61,12 +64,18 @@ export function SignInForm({ initialError, notice, defaultEmail, audience = "fam
       });
       const data = await response.json().catch(() => null) as { error?: string; redirect?: string } | null;
       if (!response.ok || !data?.redirect) {
+        feedback?.setMood("sad");
         setError(data?.error || "Sign-in did not complete. Please check your credentials and try again.");
         return;
+      }
+      if (feedback) {
+        feedback.setMood("happy");
+        await new Promise(resolve => setTimeout(resolve, 900));
       }
       window.location.href = data.redirect;
       return;
     } catch {
+      feedback?.setMood("sad");
       setError("The sign-in service could not be reached. Try again in a moment.");
     } finally {
       pending.current = false;
@@ -81,13 +90,6 @@ export function SignInForm({ initialError, notice, defaultEmail, audience = "fam
           {notice}
         </p>
       ) : null}
-      {error ? (
-        <div role="alert" className="flex items-start gap-3 rounded-card bg-danger-bg p-4 text-sm text-danger border border-danger/20">
-          <ShieldAlert aria-hidden className="mt-0.5 size-5 shrink-0" />
-          <p className="font-medium">{error}</p>
-        </div>
-      ) : null}
-
       <form onSubmit={submit} className="space-y-4">
         <noscript><p className="text-sm text-ink-soft">Enable JavaScript to use this account form, then reload the page.</p></noscript>
         <fieldset disabled={!hydrated} aria-label="Sign-in details" className="min-w-0 space-y-4 border-0 p-0">
@@ -155,6 +157,13 @@ export function SignInForm({ initialError, notice, defaultEmail, audience = "fam
             </Link>
           </div>
         </div>
+
+      {error ? (
+        <div role="alert" className="flex items-start gap-3 rounded-card bg-danger-bg p-4 text-sm text-danger border border-danger/20">
+          <ShieldAlert aria-hidden className="mt-0.5 size-5 shrink-0" />
+          <p className="font-medium">{error}</p>
+        </div>
+      ) : null}
 
         <Button type="submit" pending={busy} className="mt-2 w-full">
           {busy ? copy.busy : <>Sign in <ArrowRight aria-hidden className="size-4" /></>}

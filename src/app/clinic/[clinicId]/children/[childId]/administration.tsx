@@ -1,4 +1,6 @@
 "use client";
+import { personName } from "@/lib/person-name";
+
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Button, Field, Notice, ResultRegion, SelectField, TextField } from "@/components/ui";
@@ -55,14 +57,15 @@ function usableLots(lots: StockLotOption[]) {
  * Two steps on purpose (BP18): fill in, then REVIEW against the child's name, then sign. The child banner stays pinned above.
  * The database re-checks identity, visit, lot, stock and the approved schedule; a refusal saves nothing.
  */
-export function AdministerPanel({ clinicId, clinicTimezone, encounterId, childName, recordNo, lots, locations }: { clinicId: string; clinicTimezone: string; encounterId: string; childName: string; recordNo: string; lots: StockLotOption[]; locations: StockLocationOption[] }) {
+export function AdministerPanel({ clinicId, clinicTimezone, initialClinicTime, encounterId, childName, recordNo, lots, locations }: { clinicId: string; clinicTimezone: string; initialClinicTime: string; encounterId: string; childName: string; recordNo: string; lots: StockLotOption[]; locations: StockLocationOption[] }) {
   const router = useRouter();
   const { state, run, reset } = useMutation<{ creditedRequirements: string[]; scheduleEvaluated: boolean; administeredOn: string }>(`/api/v1/clinics/${clinicId}/encounters/${encounterId}/administrations`);
   const options = useMemo(() => usableLots(lots), [lots]);
   const [step, setStep] = useState<"edit" | "review">("edit");
   const [lotId, setLotId] = useState(options[0]?.lotId ?? "");
   const [locationId, setLocationId] = useState("");
-  const [when, setWhen] = useState(() => clinicNow(clinicTimezone));
+  const [when, setWhen] = useState(initialClinicTime);
+  const [maxWhen, setMaxWhen] = useState(initialClinicTime);
   const [route, setRoute] = useState("");
   const [site, setSite] = useState("");
   const [assess, setAssess] = useState("");
@@ -96,7 +99,9 @@ export function AdministerPanel({ clinicId, clinicTimezone, encounterId, childNa
     setStep("edit");
     setLotId(options[0]?.lotId ?? "");
     setLocationId("");
-    setWhen(clinicNow(clinicTimezone));
+    const now = clinicNow(clinicTimezone);
+    setWhen(now);
+    setMaxWhen(now);
     setRoute("");
     setSite("");
     setRepeat(false);
@@ -178,7 +183,7 @@ export function AdministerPanel({ clinicId, clinicTimezone, encounterId, childNa
             </option>
           ))}
         </SelectField>
-        <TextField id="ad-when" type="datetime-local" label="Actual time given" value={when} onChange={(e) => setWhen(e.target.value)} max={clinicNow(clinicTimezone)} required hint={zoneHint(clinicTimezone, "The real time of the injection, not the time you are typing it in.")} />
+        <TextField id="ad-when" type="datetime-local" label="Actual time given" value={when} onFocus={() => setMaxWhen(clinicNow(clinicTimezone))} onChange={(e) => { setWhen(e.target.value); setMaxWhen(clinicNow(clinicTimezone)); }} max={maxWhen} required hint={zoneHint(clinicTimezone, "The real time of the injection, not the time you are typing it in.")} />
         <TextField id="ad-route" label="Route (if required by clinic policy)" value={route} onChange={(e) => setRoute(e.target.value)} />
         <TextField id="ad-site" label="Site (if required by clinic policy)" value={site} onChange={(e) => setSite(e.target.value)} />
         <TextField id="ad-as" label="Assessment reference" value={assess} onChange={(e) => setAssess(e.target.value)} hint="Reference to the clinic's pre-vaccination assessment." />
@@ -208,10 +213,11 @@ function Row({ k, v }: { k: string; v: string }) {
 }
 
 /** Care already given that the normal path refused (or could not be entered in time). Facts are preserved; no credit until reviewed. */
-export function ExceptionForm({ clinicId, clinicTimezone, childId, encounterId, products, lots, locations }: { clinicId: string; clinicTimezone: string; childId: string; encounterId: string | null; products: { id: string; name: string }[]; lots: StockLotOption[]; locations: StockLocationOption[] }) {
+export function ExceptionForm({ clinicId, clinicTimezone, initialClinicTime, childId, encounterId, products, lots, locations }: { clinicId: string; clinicTimezone: string; initialClinicTime: string; childId: string; encounterId: string | null; products: { id: string; name: string }[]; lots: StockLotOption[]; locations: StockLocationOption[] }) {
   const router = useRouter();
   const { state, run } = useMutation<{ stockPosted: boolean; problems: string[]; reviewCaseId: string }>(`/api/v1/clinics/${clinicId}/children/${childId}/administration-exceptions`);
-  const [when, setWhen] = useState(() => clinicNow(clinicTimezone));
+  const [when, setWhen] = useState(initialClinicTime);
+  const [maxWhen, setMaxWhen] = useState(initialClinicTime);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -228,7 +234,7 @@ export function ExceptionForm({ clinicId, clinicTimezone, childId, encounterId, 
     <form onSubmit={submit}>
       <p className="mb-4 max-w-prose text-ink-soft">Use this only when the vaccine has <strong>already been given</strong> and the normal form would not accept it (for example a smudged lot number, a recalled lot, or timing outside the schedule). The record is kept, a lead reviews it, and it earns no schedule credit until accepted.</p>
       <div className="grid gap-x-4 sm:grid-cols-2">
-        <TextField id="ex-when" type="datetime-local" label="Actual time given" value={when} onChange={(e) => setWhen(e.target.value)} max={clinicNow(clinicTimezone)} required hint={zoneHint(clinicTimezone)} error={fe["dose.administeredAt"]} />
+        <TextField id="ex-when" type="datetime-local" label="Actual time given" value={when} onFocus={() => setMaxWhen(clinicNow(clinicTimezone))} onChange={(e) => { setWhen(e.target.value); setMaxWhen(clinicNow(clinicTimezone)); }} max={maxWhen} required hint={zoneHint(clinicTimezone)} error={fe["dose.administeredAt"]} />
         <SelectField id="ex-prod" name="productId" label="Vaccine (if known)" defaultValue="">
           <option value="">Not sure / describe below</option>
           {products.map((p) => (
@@ -384,7 +390,7 @@ export function CorrectionForm({ clinicId, clinicTimezone = "Asia/Manila", event
               {hits?.map((h) => (
                 <label key={h.childId} className="flex min-h-11 items-center gap-2">
                   <input type="radio" name={`tgt-${eventId}`} className="size-5" checked={target?.childId === h.childId} onChange={() => setTarget(h)} />
-                  {h.displayName} · {h.localRecordNo}
+                  {personName(h.displayName)} · {h.localRecordNo}
                 </label>
               ))}
             </div>

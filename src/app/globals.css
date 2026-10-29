@@ -35,8 +35,8 @@
   --color-info: #1d4ed8;
   --color-info-bg: #eff6ff;
 
-  --radius-card: 0.5rem;
-  --radius-control: 0.375rem;
+  --radius-card: 0.875rem;
+  --radius-control: 0.5rem;
   --shadow-lift: 0 4px 6px -1px rgb(15 23 42 / 0.05), 0 10px 15px -3px rgb(15 23 42 / 0.08);
   --shadow-glow: 0 0 0 3px rgb(6 72 239 / 0.12);
   --font-sans: "CVSRS Jakarta", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -576,3 +576,37 @@ button:not(:disabled):active {
     color: inherit;
   }
 }
+
+.signin-mascot-reaction { position: relative; }
+.signin-welcome-face { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: url('/mascots/nurse-reactions.webp') 0 0 / 300% 300% no-repeat; }
+.signin-welcome-arm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; opacity: 0; }
+.signin-welcome-forearm { transform-origin: 65px 77px; }
+@media (prefers-reduced-motion: no-preference) {
+  .signin-welcome-arm, .signin-welcome-face { animation: signin-welcome-visible 1s linear both; }
+  .signin-welcome-forearm { animation: signin-welcome-wave 1s cubic-bezier(0.37, 0, 0.63, 1) both; }
+  @keyframes signin-welcome-visible { 0%, 100% { opacity: 0; } 12%, 88% { opacity: 1; } }
+  @keyframes signin-welcome-wave {
+    0%, 100% { transform: rotate(18deg); }
+    16%, 54% { transform: rotate(-10deg); }
+    35% { transform: rotate(10deg); }
+    73% { transform: rotate(8deg); }
+    85% { transform: rotate(0deg); }
+  }
+}
+.signin-nurse-sad, .signin-nurse-happy { position: absolute; inset: 0; background-repeat: no-repeat; }
+.signin-nurse-sad { background-image: url('/mascots/nurse-sad.webp'); background-size: 86% 86%; background-position: center 20%; }
+.signin-nurse-happy { background-image: url('/mascots/nurse-reactions.webp'); background-size: 300% 300%; background-position: 50% 0; }
+.signin-mascot-heart { position: absolute; width: 13px; height: 13px; color: #e7466b; fill: #fb7185; pointer-events: none; }
+.signin-heart-0 { left: 2%; top: 35%; }
+.signin-heart-1 { left: 12%; top: 9%; }
+.signin-heart-2 { left: 36%; top: -3%; }
+.signin-heart-3 { right: 3%; top: 15%; }
+.signin-heart-4 { right: -4%; top: 48%; }
+.signin-heart-5 { left: 8%; top: 65%; }
+@media (prefers-reduced-motion: no-preference) {
+  .signin-mascot-heart { animation: signin-heart-float 850ms ease-out both; }
+  .signin-heart-1, .signin-heart-4 { animation-delay: 70ms; }
+  .signin-heart-2, .signin-heart-5 { animation-delay: 120ms; }
+  @keyframes signin-heart-float { from { opacity: 0; transform: translateY(6px) scale(.75); } 30% { opacity: 1; } to { opacity: 1; transform: translateY(-5px) scale(1); } }
+}
+

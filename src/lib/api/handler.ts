@@ -35,6 +35,11 @@ interface Opts<B> {
   rate?: { limit: number; windowMs: number; onStoreFailure?: StoreFailurePolicy; keyParams?: string[] };
 }
 
+interface ApiRouteHandler {
+  (req: Request): Promise<Response>;
+  (req: Request, routeCtx: { params: Promise<Record<string, string>> }): Promise<Response>;
+}
+
 const DEFAULT_RATE = { limit: 60, windowMs: 60_000 };
 /** Pre-authentication allowance per client address, as a multiple of the per-user limit. */
 export const PRE_AUTH_FACTOR = 10;
@@ -47,7 +52,7 @@ function reply(status: number, payload: Record<string, unknown>, requestId: stri
   return Response.json({ ...payload, requestId }, { status, headers: { "x-request-id": requestId, "cache-control": "no-store", ...extra } });
 }
 
-export function api<B = undefined>(opts: Opts<B>, fn: (ctx: ApiCtx<B>) => Promise<unknown>) {
+export function api<B = undefined>(opts: Opts<B>, fn: (ctx: ApiCtx<B>) => Promise<unknown>): ApiRouteHandler {
   return async (req: Request, routeCtx?: { params: Promise<Record<string, string>> }): Promise<Response> => {
     const requestId = randomUUID();
     try {

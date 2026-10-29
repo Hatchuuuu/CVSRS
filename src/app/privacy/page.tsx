@@ -204,9 +204,8 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          Text messages are optional. They are sent only if you turn them on in <Link href="/messages">Messages</Link> and your health center
-          has checked your number. A text message only tells you to open the Service: it never contains your child&apos;s name, vaccines or
-          health details, and the same information is always available in your account. You can turn text messages off at any time.
+          Clinic updates are available in <Link href="/messages?portal=parents">Messages</Link>. Text-message delivery is unavailable in this local version.
+          Manage your clinic contact number, message language and existing text-message opt-out in <Link href="/account?portal=parents#contact-h">Account contact preferences</Link>.
         </p>
         <p>
           The Service does not send verification or confirmation emails when you create an account. Email is used to sign you in and to send

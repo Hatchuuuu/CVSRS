@@ -7,6 +7,8 @@ const CERTIFICATE_FONT = ["./src/lib/certificates/fonts/NotoSansSC.ttf", "./src/
 const config: NextConfig = {
   // The end-to-end runner (scripts/e2e.ts) uses its own build folder, so it can run beside `npm run dev` (one `next dev` per folder).
   distDir: process.env.CVSRS_DIST_DIR || ".next",
+  // Keep anonymous warmup entries through one phase; scripts/e2e.ts releases the process between phases.
+  ...(process.env.CVSRS_DIST_DIR === ".next-e2e" ? { onDemandEntries: { maxInactiveAge: 3_600_000 } } : {}),
   poweredByHeader: false,
   reactStrictMode: true,
   // Only the two routes that render certificate PDFs need the font (read from disk by src/lib/certificates/pdf.ts).

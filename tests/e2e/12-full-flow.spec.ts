@@ -71,8 +71,9 @@ test("1. the public page lists the health center; the family sees the prepared c
 
 test("2. the family registers a fresh child; it waits for clinic verification", async ({ browser }) => {
   const { context, page } = await signInFamily(browser);
+  await page.getByRole("link", { name: "Register a child", exact: true }).first().click();
   const add = page.getByRole("region", { name: "Register a new child record" });
-  await add.getByLabel("Clinic").selectOption({ label: CLINIC });
+  await add.getByLabel("Clinic", { exact: true }).selectOption({ label: CLINIC });
   const accept = add.getByRole("button", { name: "I have read this and I accept" });
   await expect(add.getByText("Checking the clinic's privacy notice")).toHaveCount(0);
   if (await accept.isVisible()) await accept.click();
@@ -84,8 +85,9 @@ test("2. the family registers a fresh child; it waits for clinic verification", 
   await add.getByRole("button", { name: "Add child" }).click();
   await expect(add.getByRole("status").filter({ hasText: "Saved — waiting for clinic verification" })).toBeVisible();
 
+  await page.goto("/children");
   await page.reload();
-  const card = page.locator('[aria-label="Children"]').locator("div.card-elevated").filter({ hasText: FAMILY });
+  const card = page.getByRole("list", { name: "Children", exact: true }).getByRole("listitem").filter({ hasText: FAMILY });
   await expect(card).toContainText("Clinic verification needed to see vaccination history");
   childName = (await card.getByRole("heading", { level: 2 }).textContent())!.trim();
   childId = /\/children\/([0-9a-f-]{36})/.exec((await card.getByRole("link", { name: /View details/ }).getAttribute("href")) ?? "")?.[1] ?? "";
@@ -237,8 +239,8 @@ test("7. the lead's reports and audit trail; the administrator's screens, withou
 
   const admin = await signInStaff(browser, "admin");
   const a = admin.page;
-  for (const [path, heading] of [["settings", "Clinic settings and operations"], ["access", "Staff access"], ["clinical", "Clinical setup"], ["content", "Care information"], ["admin", "Admin console"]] as const) {
-    await a.goto(`/clinic/${clinicId}/${path}`);
+  for (const [path, heading] of [["settings", "Clinic settings"], ["staff", "Staff accounts and access"], ["operations", "Operations"], ["audit", "Technical audit"]] as const) {
+    await a.goto(`/developer/${clinicId}/${path}`);
     await expect(a.getByRole("heading", { level: 1 })).toContainText(heading);
   }
   await expect(a.getByRole("navigation", { name: "Clinic Navigation" }).getByRole("link", { name: "Today" })).toHaveCount(0);

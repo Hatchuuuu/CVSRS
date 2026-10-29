@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { KeyRound, Stethoscope, UserCheck } from "lucide-react";
+import { NurseMascot } from "@/components/nurse-mascot";
+import { SignInFeedback } from "@/components/sign-in-feedback";
+import { KeyRound, UserCheck } from "lucide-react";
 import { AuthPage } from "@/components/auth-page";
 import { signInMessages } from "@/app/sign-in/messages";
 import { SignInUnavailable, signUpMode } from "@/app/sign-up/availability";
@@ -17,8 +19,9 @@ export default async function StaffSignIn({ searchParams }: { searchParams: Prom
   const messages = signInMessages(await searchParams);
   const mode = await signUpMode();
   return (
+    <SignInFeedback failed={Boolean(messages.initialError)}>
     <AuthPage
-      Icon={Stethoscope}
+      headingVisual={<NurseMascot variant="staff" size={88} className="shrink-0 rounded-control [&_button:focus-visible]:outline-2 [&_button:focus-visible]:outline-offset-2 [&_button:focus-visible]:outline-primary" />}
       title="Clinic staff sign in"
       lead="For nurses, midwives, barangay health workers and other staff of health centers that use eVacTrack."
       after={
@@ -48,5 +51,6 @@ export default async function StaffSignIn({ searchParams }: { searchParams: Prom
       {mode === "unavailable" ? <SignInUnavailable /> : null}
       {mode === "unavailable" ? null : <SignInForm audience="staff" alternate={{ text: "New staff member?", href: STAFF_SIGN_UP_PATH, link: "Create a staff account" }} {...messages} />}
     </AuthPage>
+    </SignInFeedback>
   );
 }
